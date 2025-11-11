@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { theme } from "@/lib/theme";
+import { fonts, getFontFamily } from "@/lib/fonts";
 
 /**
  * ThemeProvider Component
  * 
- * This component injects CSS variables from theme.ts into the document root.
- * This makes theme.ts the single source of truth for all colors in the application.
+ * This component injects CSS variables from theme.ts and fonts.ts into the document root.
+ * This makes theme.ts the single source of truth for all colors and fonts.ts for all fonts.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -46,6 +47,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--calendar-leave", theme.calendar.leave);
     root.style.setProperty("--calendar-holiday", theme.calendar.holiday);
     root.style.setProperty("--calendar-on-duty", theme.calendar.onDuty);
+
+    // Inject all font settings as CSS variables
+    root.style.setProperty("--font-primary", fonts.primary);
+    root.style.setProperty("--font-fallback", fonts.fallback);
+    root.style.setProperty("--font-mono", fonts.mono);
+    root.style.setProperty("--font-family", getFontFamily("primary"));
+    root.style.setProperty("--font-family-mono", getFontFamily("mono"));
   }, []);
 
   return <>{children}</>;

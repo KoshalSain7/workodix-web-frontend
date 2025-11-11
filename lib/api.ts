@@ -62,12 +62,14 @@ class ApiClient {
       headers,
     });
 
-    const responseData: ApiResponse<T> | ApiError = await response.json().catch(() => ({
-      statusCode: 500,
-      message: "Failed to parse response",
-      valid: false,
-      timestamp: new Date().toISOString(),
-    }));
+    const responseData: ApiResponse<T> | ApiError = await response
+      .json()
+      .catch(() => ({
+        statusCode: 500,
+        message: "Failed to parse response",
+        valid: false,
+        timestamp: new Date().toISOString(),
+      }));
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -204,10 +206,11 @@ export const authApi = {
 
 // Users API
 export const usersApi = {
-  getProfile: () =>
-    apiClient.get<{ user: any; employee: any }>("/users/profile"),
-  updateProfile: (data: any) =>
-    apiClient.put<any>("/users/profile", data),
+  getProfile: (userId?: string) => {
+    const url = userId ? `/users/profile?userId=${userId}` : "/users/profile";
+    return apiClient.get<{ user: any; employee: any }>(url);
+  },
+  updateProfile: (data: any) => apiClient.put<any>("/users/profile", data),
   updateEmployeeProfile: (data: any) =>
     apiClient.put<any>("/users/employee-profile", data),
 };
@@ -247,12 +250,9 @@ export const payrollApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  getData: () =>
-    apiClient.get<{
-      attendance: any[];
-      pendingLeaves: number;
-      celebrations: any[];
-    }>("/dashboard"),
+  getDashboard: () => apiClient.get<any>("/dashboard"),
+  // Legacy method name for backward compatibility
+  getData: () => apiClient.get<any>("/dashboard"),
 };
 
 // Inbox API
@@ -313,15 +313,89 @@ export const requestsApi = {
     const params = new URLSearchParams();
     if (type) params.append("type", type);
     if (status) params.append("status", status);
-    return apiClient.get<any[]>(`/requests${params.toString() ? `?${params}` : ""}`);
+    return apiClient.get<any[]>(
+      `/requests${params.toString() ? `?${params}` : ""}`
+    );
   },
   getOne: (id: string) => apiClient.get<any>(`/requests/${id}`),
-  update: (id: string, data: any) => apiClient.put<any>(`/requests/${id}`, data),
+  update: (id: string, data: any) =>
+    apiClient.put<any>(`/requests/${id}`, data),
   delete: (id: string) => apiClient.delete(`/requests/${id}`),
   // Specific request types
   createAsset: (data: any) => apiClient.post<any>("/requests/asset", data),
   createExpense: (data: any) => apiClient.post<any>("/requests/expense", data),
   createTravel: (data: any) => apiClient.post<any>("/requests/travel", data),
   createLoan: (data: any) => apiClient.post<any>("/requests/loan", data),
-  createHelpdesk: (data: any) => apiClient.post<any>("/requests/helpdesk", data),
+  createHelpdesk: (data: any) =>
+    apiClient.post<any>("/requests/helpdesk", data),
+};
+
+// Quiz API
+export const quizApi = {
+  getQuestions: (topic?: string, category?: string) => {
+    const params = new URLSearchParams();
+    if (topic) params.append("topic", topic);
+    if (category) params.append("category", category);
+    return apiClient.get<any[]>(
+      `/quiz/questions${params.toString() ? `?${params}` : ""}`
+    );
+  },
+  getQuestion: (id: string) => apiClient.get<any>(`/quiz/questions/${id}`),
+  submitQuiz: (data: {
+    answers: Array<{ questionId: string; selectedAnswerIndex: number }>;
+    topic?: string;
+  }) => apiClient.post<any>("/quiz/submit", data),
+  getResults: () => apiClient.get<any[]>("/quiz/results"),
+  getResult: (id: string) => apiClient.get<any>(`/quiz/results/${id}`),
+  seedQuestions: () => apiClient.post<any>("/quiz/seed"),
+};
+
+// Search API
+export const searchApi = {
+  search: (query: string, limit?: number) => {
+    const params = new URLSearchParams();
+    params.append("q", query);
+    if (limit) params.append("limit", limit.toString());
+    return apiClient.get<{
+      users: Array<{
+        id: string;
+        name: string;
+        email: string;
+        employeeCode: string;
+        company: string;
+        role: string;
+        department: string;
+        profilePicture: string;
+        type: "user";
+      }>;
+      posts: Array<{
+        id: string;
+        content: string;
+        postType: string;
+        author: string;
+        authorId: string;
+        authorPicture: string;
+        createdAt: string;
+        type: "post";
+      }>;
+      navigation: any[];
+    }>(`/search?${params.toString()}`);
+  },
+  searchUsers: (query: string, limit?: number) => {
+    const params = new URLSearchParams();
+    params.append("q", query);
+    if (limit) params.append("limit", limit.toString());
+    return apiClient.get<
+      Array<{
+        id: string;
+        name: string;
+        email: string;
+        employeeCode: string;
+        company: string;
+        role: string;
+        department: string;
+        profilePicture: string;
+      }>
+    >(`/search/users?${params.toString()}`);
+  },
 };

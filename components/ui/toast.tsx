@@ -35,7 +35,7 @@ export function ToastContainer() {
   const { toasts, removeToast } = useToastStore();
 
   return (
-    <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 items-center">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
       ))}
@@ -89,7 +89,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
   };
 
   return (
-    <div className="relative bg-gray-800 rounded-lg shadow-lg p-4 min-w-[320px] max-w-md animate-slide-in">
+    <div className="relative bg-gray-800 rounded-lg shadow-lg p-4 min-w-[320px] max-w-md animate-slide-up">
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">{getIcon()}</div>
         <div className="flex-1 min-w-0">

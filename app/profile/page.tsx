@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, ChangeEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,10 +24,13 @@ import { format } from "date-fns";
 
 export default function ProfilePage() {
   const { user, checkAuth } = useAuthStore();
+  const searchParams = useSearchParams();
+  const viewUserId = searchParams.get('userId');
   const [profile, setProfile] = useState<any>(null);
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [isViewingOtherUser, setIsViewingOtherUser] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -51,12 +55,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [viewUserId]);
 
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const data = await usersApi.getProfile();
+      const userId = viewUserId || undefined;
+      setIsViewingOtherUser(!!viewUserId && viewUserId !== user?.id);
+      const data = await usersApi.getProfile(userId);
       setProfile(data.user);
       setEmployee(data.employee);
       setProfilePicturePreview(data.user.profilePicture || null);
@@ -188,14 +194,14 @@ export default function ProfilePage() {
   };
 
   const handleProfilePictureUploadClick = () => {
-    if (!editing || saving) {
+    if (!editing || saving || isViewingOtherUser) {
       return;
     }
     profilePictureInputRef.current?.click();
   };
 
   const handleSignatureUploadClick = () => {
-    if (!editing || saving) {
+    if (!editing || saving || isViewingOtherUser) {
       return;
     }
     signatureInputRef.current?.click();
@@ -232,12 +238,13 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Profile</h1>
-          {!editing ? (
-            <Button onClick={() => setEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Profile
-            </Button>
-          ) : (
+          {!isViewingOtherUser && (
+            !editing ? (
+              <Button onClick={() => setEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Profile
+              </Button>
+            ) : (
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-2" />
@@ -248,6 +255,7 @@ export default function ProfilePage() {
                 Cancel
               </Button>
             </div>
+          )
           )}
         </div>
 
@@ -265,7 +273,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Prefix
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.prefix}
                     onChange={(e) =>
@@ -281,7 +289,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   First Name
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.firstName}
                     onChange={(e) =>
@@ -298,7 +306,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Middle Name
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.middleName}
                     onChange={(e) =>
@@ -314,7 +322,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Last Name
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.lastName}
                     onChange={(e) =>
@@ -340,7 +348,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Phone
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.phone}
                     onChange={(e) =>
@@ -360,7 +368,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Date of Birth
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.dateOfBirth}
                     onChange={(e) =>
@@ -384,7 +392,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Gender
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <select
                     className="w-full px-3 py-2 border rounded-md mt-1"
                     value={formData.gender}
@@ -405,7 +413,7 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium text-muted-foreground">
                   Blood Group
                 </label>
-                {editing ? (
+                {editing && !isViewingOtherUser ? (
                   <Input
                     value={formData.bloodGroup}
                     onChange={(e) =>

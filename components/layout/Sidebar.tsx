@@ -155,13 +155,13 @@ export function Sidebar() {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200 hover:scale-105",
                       isActive
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-primary text-primary-foreground animate-scale-in"
                         : "text-foreground hover:bg-muted"
                     )}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-5 w-5 transition-transform duration-200" />
                     {item.name}
                   </Link>
                 );
@@ -182,9 +182,9 @@ export function Sidebar() {
                       key={item.name}
                       href={item.href}
                       className={cn(
-                        "block px-6 py-2 rounded-md text-sm transition-colors",
+                        "block px-6 py-2 rounded-md text-sm transition-all duration-200 hover:scale-105",
                         isActive
-                          ? "bg-accent/20 text-primary font-medium"
+                          ? "bg-accent/20 text-primary font-medium animate-scale-in"
                           : "text-foreground hover:bg-muted"
                       )}
                     >
@@ -210,9 +210,9 @@ export function Sidebar() {
                       key={item}
                       href={href}
                       className={cn(
-                        "block px-6 py-2 rounded-md text-sm transition-colors",
+                        "block px-6 py-2 rounded-md text-sm transition-all duration-200 hover:scale-105",
                         isActive
-                          ? "bg-accent/20 text-primary font-medium"
+                          ? "bg-accent/20 text-primary font-medium animate-scale-in"
                           : "text-foreground hover:bg-muted"
                       )}
                     >
