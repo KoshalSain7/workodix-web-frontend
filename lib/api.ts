@@ -304,6 +304,12 @@ export const socialApi = {
     apiClient.get<any[]>(`/social/posts${userId ? `?userId=${userId}` : ""}`),
   getPost: (id: string) => apiClient.get<any>(`/social/post/${id}`),
   likePost: (id: string) => apiClient.post<any>(`/social/post/${id}/like`),
+  createComment: (postId: string, content: string) =>
+    apiClient.post<any>(`/social/post/${postId}/comment`, { content }),
+  getComments: (postId: string) =>
+    apiClient.get<any[]>(`/social/post/${postId}/comments`),
+  deleteComment: (postId: string, commentId: string) =>
+    apiClient.post<any>(`/social/post/${postId}/comment/${commentId}/delete`),
 };
 
 // Requests API

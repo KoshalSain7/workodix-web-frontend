@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/layout/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog } from "@/components/ui/dialog";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { socialApi } from "@/lib/api";
+import { toast } from "@/components/ui/toast";
 import {
   Edit,
   Star,
@@ -16,7 +21,9 @@ import {
   MessageCircle,
   ThumbsUp,
   Heart,
-  Hand,
+  Send,
+  Trash2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -33,14 +40,161 @@ export default function Home() {
     fetchDashboard,
     loading,
   } = useDashboardStore();
+  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [postLikes, setPostLikes] = useState<Record<string, number>>({});
+  const [bouncingLikes, setBouncingLikes] = useState<Set<string>>(new Set());
+  const [openComments, setOpenComments] = useState<Set<string>>(new Set());
+  const [postComments, setPostComments] = useState<Record<string, any[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [loadingComments, setLoadingComments] = useState<Set<string>>(new Set());
+  const [submittingComment, setSubmittingComment] = useState<Set<string>>(new Set());
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [postFormData, setPostFormData] = useState({
+    type: "General",
+    content: "",
+    hobbies: "",
+    skills: "",
+  });
+  const [creatingPost, setCreatingPost] = useState(false);
 
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const feedColumnRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
 
+  // Initialize post likes and liked status from feedPosts
+  useEffect(() => {
+    const initialLikes: Record<string, number> = {};
+    const initialLikedPosts = new Set<string>();
+    
+    feedPosts.forEach((post) => {
+      initialLikes[post.id] = post.likes || 0;
+      // Check if current user has liked this post
+      if ((post as any).likedBy && user?.id && (post as any).likedBy.includes(user.id)) {
+        initialLikedPosts.add(post.id);
+      }
+    });
+    
+    setPostLikes(initialLikes);
+    setLikedPosts(initialLikedPosts);
+  }, [feedPosts, user?.id]);
+
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
+
+  // Load comments when comment section is opened
+  const loadComments = async (postId: string) => {
+    if (loadingComments.has(postId) || postComments[postId]) return;
+    
+    setLoadingComments(new Set([...loadingComments, postId]));
+    try {
+      const comments = await socialApi.getComments(postId);
+      setPostComments({
+        ...postComments,
+        [postId]: comments,
+      });
+    } catch (error: any) {
+      console.error("Failed to load comments:", error);
+      toast.error("Failed to load comments", error.message || "Please try again");
+    } finally {
+      setLoadingComments(new Set(Array.from(loadingComments).filter(id => id !== postId)));
+    }
+  };
+
+  const handleToggleComments = (postId: string) => {
+    const newOpenComments = new Set(openComments);
+    if (newOpenComments.has(postId)) {
+      newOpenComments.delete(postId);
+    } else {
+      newOpenComments.add(postId);
+      loadComments(postId);
+    }
+    setOpenComments(newOpenComments);
+  };
+
+  const handleSubmitComment = async (postId: string) => {
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+
+    setSubmittingComment(new Set([...submittingComment, postId]));
+    try {
+      const newComment = await socialApi.createComment(postId, content);
+      setPostComments({
+        ...postComments,
+        [postId]: [...(postComments[postId] || []), newComment],
+      });
+      setCommentInputs({
+        ...commentInputs,
+        [postId]: "",
+      });
+      toast.success("Comment added!", "");
+    } catch (error: any) {
+      console.error("Failed to add comment:", error);
+      toast.error("Failed to add comment", error.message || "Please try again");
+    } finally {
+      setSubmittingComment(new Set(Array.from(submittingComment).filter(id => id !== postId)));
+    }
+  };
+
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      await socialApi.deleteComment(postId, commentId);
+      setPostComments({
+        ...postComments,
+        [postId]: (postComments[postId] || []).filter((c: any) => c.id !== commentId),
+      });
+      // Update the feed posts comment count
+      const updatedPosts = feedPosts.map(p => 
+        p.id === postId ? { ...p, comments: Math.max(0, (p.comments || 0) - 1) } : p
+      );
+      toast.success("Comment deleted!", "");
+    } catch (error: any) {
+      console.error("Failed to delete comment:", error);
+      toast.error("Failed to delete comment", error.message || "Please try again");
+    }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!postFormData.content.trim()) {
+      toast.error("Post content is required", "Please enter some content for your post");
+      return;
+    }
+
+    setCreatingPost(true);
+    try {
+      const hobbies = postFormData.hobbies
+        ? postFormData.hobbies.split(",").map((h) => h.trim()).filter(Boolean)
+        : [];
+      const skills = postFormData.skills
+        ? postFormData.skills.split(",").map((s) => s.trim()).filter(Boolean)
+        : [];
+
+      await socialApi.createPost({
+        type: postFormData.type,
+        content: postFormData.content,
+        hobbies,
+        skills,
+      });
+
+      toast.success("Post created successfully!", "");
+      setShowCreatePost(false);
+      setPostFormData({
+        type: "General",
+        content: "",
+        hobbies: "",
+        skills: "",
+      });
+      
+      // Refresh dashboard to show new post
+      await fetchDashboard();
+    } catch (error: any) {
+      console.error("Failed to create post:", error);
+      toast.error("Failed to create post", error.message || "Please try again");
+    } finally {
+      setCreatingPost(false);
+    }
+  };
 
   // Auto-hide scrollbar functionality
   useEffect(() => {
@@ -111,7 +265,10 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button className="transition-smooth hover:scale-105 animate-fade-in">
+            <Button 
+              className="transition-smooth hover:scale-105 animate-fade-in"
+              onClick={() => setShowCreatePost(true)}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Post
             </Button>
@@ -291,23 +448,209 @@ export default function Home() {
                       <div className="flex items-center gap-4 pt-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <ThumbsUp className="h-4 w-4" />
-                          <span>{post.likes}</span>
+                          <span>{postLikes[post.id] !== undefined ? postLikes[post.id] : (post.likes || 0)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MessageCircle className="h-4 w-4" />
-                          <span>{post.comments} Comments</span>
+                          <span>
+                            {postComments[post.id]?.length !== undefined 
+                              ? postComments[post.id].length 
+                              : (post.comments || 0)} Comments
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 pt-2">
-                        <Button variant="ghost" size="sm" className="transition-smooth hover:scale-105">
-                          <Hand className="h-4 w-4 mr-2" />
-                          Clap
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className={`transition-smooth hover:scale-105 ${likedPosts.has(post.id) ? 'text-primary' : ''}`}
+                          onClick={async () => {
+                            try {
+                              const wasLiked = likedPosts.has(post.id);
+                              
+                              // Trigger bounce animation
+                              setBouncingLikes(new Set([...bouncingLikes, post.id]));
+                              setTimeout(() => {
+                                setBouncingLikes((prev) => new Set(Array.from(prev).filter(id => id !== post.id)));
+                              }, 400);
+                              
+                              await socialApi.likePost(post.id);
+                              
+                              if (wasLiked) {
+                                // Unlike
+                                setLikedPosts(new Set(Array.from(likedPosts).filter(id => id !== post.id)));
+                                setPostLikes({
+                                  ...postLikes,
+                                  [post.id]: Math.max(0, (postLikes[post.id] || post.likes || 0) - 1),
+                                });
+                              } else {
+                                // Like
+                                setLikedPosts(new Set([...likedPosts, post.id]));
+                                setPostLikes({
+                                  ...postLikes,
+                                  [post.id]: (postLikes[post.id] || post.likes || 0) + 1,
+                                });
+                              }
+                            } catch (error: any) {
+                              console.error("Failed to like post:", error);
+                              toast.error("Failed to like post", error.message || "Please try again");
+                            }
+                          }}
+                        >
+                          <ThumbsUp 
+                            className={`h-4 w-4 mr-2 ${likedPosts.has(post.id) ? 'fill-current' : ''} ${bouncingLikes.has(post.id) ? 'animate-bounce-like' : ''}`} 
+                          />
+                          Like
                         </Button>
-                        <Button variant="ghost" size="sm" className="transition-smooth hover:scale-105">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="transition-smooth hover:scale-105"
+                          onClick={() => handleToggleComments(post.id)}
+                        >
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Comment
                         </Button>
                       </div>
+
+                      {/* Comments Section */}
+                      {openComments.has(post.id) && (
+                        <div className="mt-4 pt-4 border-t animate-fade-in">
+                          {/* Comment Input */}
+                          <div className="flex gap-2 mb-4">
+                            <div className="relative h-8 w-8 shrink-0">
+                              {user?.profilePicture ? (
+                                <img
+                                  src={user.profilePicture}
+                                  alt={user.firstName || "You"}
+                                  className="h-8 w-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`avatar-fallback h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center ${user?.profilePicture ? 'hidden' : ''}`}
+                              >
+                                <span className="text-xs font-medium">
+                                  {(user?.firstName || "U").charAt(0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex gap-2">
+                              <Input
+                                placeholder="Write a comment..."
+                                value={commentInputs[post.id] || ""}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCommentInputs({
+                                  ...commentInputs,
+                                  [post.id]: e.target.value,
+                                })}
+                                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmitComment(post.id);
+                                  }
+                                }}
+                                className="text-sm"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => handleSubmitComment(post.id)}
+                                disabled={!commentInputs[post.id]?.trim() || submittingComment.has(post.id)}
+                                className="shrink-0 transition-smooth hover:scale-105"
+                              >
+                                {submittingComment.has(post.id) ? (
+                                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <Send className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Comments List */}
+                          {loadingComments.has(post.id) ? (
+                            <div className="text-center py-4 text-sm text-muted-foreground animate-pulse">
+                              Loading comments...
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {(postComments[post.id] || []).map((comment: any) => {
+                                const commentAuthor = comment.user
+                                  ? `${comment.user.firstName} ${comment.user.lastName}`
+                                  : "Unknown User";
+                                const commentProfilePicture = comment.user?.profilePicture;
+                                const isOwnComment = comment.userId === user?.id;
+
+                                return (
+                                  <div
+                                    key={comment.id}
+                                    className="flex gap-3 animate-slide-up group"
+                                  >
+                                    <div className="relative h-8 w-8 shrink-0">
+                                      {commentProfilePicture ? (
+                                        <img
+                                          src={commentProfilePicture}
+                                          alt={commentAuthor}
+                                          className="h-8 w-8 rounded-full object-cover"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                                            if (fallback) fallback.style.display = 'flex';
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div
+                                        className={`avatar-fallback h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center ${commentProfilePicture ? 'hidden' : ''}`}
+                                      >
+                                        <span className="text-xs font-medium">
+                                          {commentAuthor.charAt(0)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="bg-muted rounded-lg p-3 group-hover:bg-muted/80 transition-colors">
+                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-semibold truncate">
+                                              {commentAuthor}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                                            </p>
+                                          </div>
+                                          {isOwnComment && (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                              onClick={() => handleDeleteComment(post.id, comment.id)}
+                                            >
+                                              <Trash2 className="h-3 w-3 text-muted-foreground hover:text-error" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                        <p className="text-sm whitespace-pre-wrap break-words">
+                                          {comment.content}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {(!postComments[post.id] || postComments[post.id].length === 0) && !loadingComments.has(post.id) && (
+                                <div className="text-center py-4 text-sm text-muted-foreground">
+                                  No comments yet. Be the first to comment!
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -413,6 +756,78 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Create Post Dialog */}
+      <Dialog open={showCreatePost} onOpenChange={setShowCreatePost} title="Create New Post">
+        <form onSubmit={handleCreatePost} className="space-y-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Post Type</label>
+            <select
+              className="w-full px-3 py-2 border rounded-md bg-background"
+              value={postFormData.type}
+              onChange={(e) => setPostFormData({ ...postFormData, type: e.target.value })}
+              required
+            >
+              <option value="General">General</option>
+              <option value="Welcome post">Welcome post</option>
+              <option value="Announcement">Announcement</option>
+              <option value="Achievement">Achievement</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Content *</label>
+            <Textarea
+              placeholder="What's on your mind?"
+              value={postFormData.content}
+              onChange={(e) => setPostFormData({ ...postFormData, content: e.target.value })}
+              rows={6}
+              required
+              className="resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Hobbies (comma-separated)</label>
+            <Input
+              placeholder="e.g., Reading, Traveling, Photography"
+              value={postFormData.hobbies}
+              onChange={(e) => setPostFormData({ ...postFormData, hobbies: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Skills (comma-separated)</label>
+            <Input
+              placeholder="e.g., JavaScript, React, Node.js"
+              value={postFormData.skills}
+              onChange={(e) => setPostFormData({ ...postFormData, skills: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowCreatePost(false);
+                setPostFormData({
+                  type: "General",
+                  content: "",
+                  hobbies: "",
+                  skills: "",
+                });
+              }}
+              disabled={creatingPost}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={creatingPost || !postFormData.content.trim()}>
+              {creatingPost ? "Creating..." : "Create Post"}
+            </Button>
+          </div>
+        </form>
+      </Dialog>
       </MainLayout>
     </AuthGuard>
   );

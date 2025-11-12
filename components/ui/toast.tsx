@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { CheckCircle2, XCircle, AlertCircle, X } from "lucide-react";
 import { create } from "zustand";
 
@@ -46,21 +46,44 @@ export function ToastContainer() {
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
   const [progress, setProgress] = useState(100);
   const duration = toast.duration || 3000;
+  const onCloseRef = useRef(onClose);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Update ref when onClose changes
   useEffect(() => {
-    const interval = setInterval(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Handle progress update
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
       setProgress((prev) => {
-        if (prev <= 0) {
-          clearInterval(interval);
-          onClose();
-          return 0;
-        }
-        return prev - (100 / (duration / 50));
+        const newProgress = prev - (100 / (duration / 50));
+        return newProgress <= 0 ? 0 : newProgress;
       });
     }, 50);
 
-    return () => clearInterval(interval);
-  }, [duration, onClose]);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [duration]);
+
+  // Handle auto-close when progress reaches 0
+  useEffect(() => {
+    if (progress <= 0) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      // Use setTimeout to defer the state update to avoid render phase issues
+      const timeoutId = setTimeout(() => {
+        onCloseRef.current();
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [progress]);
 
   const getIcon = () => {
     switch (toast.type) {
