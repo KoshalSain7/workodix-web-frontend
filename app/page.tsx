@@ -11,7 +11,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { socialApi } from "@/lib/api";
+import { socialApi, usersApi, chatApi } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
 import {
   Edit,
@@ -24,6 +24,12 @@ import {
   Send,
   Trash2,
   X,
+  CheckCircle2,
+  Circle,
+  User,
+  ArrowRight,
+  Bell,
+  Mail,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -36,6 +42,7 @@ export default function Home() {
     leaveBalances,
     badges,
     inboxPendingCount,
+    inboxTasks,
     calendarData,
     fetchDashboard,
     loading,
@@ -56,6 +63,10 @@ export default function Home() {
     skills: "",
   });
   const [creatingPost, setCreatingPost] = useState(false);
+  const [profileCompletion, setProfileCompletion] = useState<number>(0);
+  const [showProfileTasks, setShowProfileTasks] = useState(false);
+  const [profileTasks, setProfileTasks] = useState<any>(null);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const feedColumnRef = useRef<HTMLDivElement>(null);
@@ -80,7 +91,40 @@ export default function Home() {
 
   useEffect(() => {
     fetchDashboard();
+    loadProfileCompletion();
   }, [fetchDashboard]);
+
+  const loadProfileCompletion = async () => {
+    try {
+      const response = await usersApi.getProfileCompletion();
+      setProfileCompletion(response.percentage || 0);
+    } catch (error: any) {
+      console.error("Failed to load profile completion:", error);
+      // Set to 0 if there's an error
+      setProfileCompletion(0);
+    }
+  };
+
+  const loadProfileTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      const response = await usersApi.getProfileTasks();
+      setProfileTasks(response);
+    } catch (error: any) {
+      console.error("Failed to load profile tasks:", error);
+      toast.error("Failed to load profile tasks", error.message || "Please try again");
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  const handleOpenProfileTasks = async () => {
+    setShowProfileTasks(true);
+    // Always refresh tasks to get latest completion status
+    await loadProfileTasks();
+    // Also refresh the completion percentage
+    await loadProfileCompletion();
+  };
 
   // Load comments when comment section is opened
   const loadComments = async (postId: string) => {
@@ -188,6 +232,8 @@ export default function Home() {
       
       // Refresh dashboard to show new post
       await fetchDashboard();
+      // Refresh profile completion since creating a post affects it
+      await loadProfileCompletion();
     } catch (error: any) {
       console.error("Failed to create post:", error);
       toast.error("Failed to create post", error.message || "Please try again");
@@ -256,14 +302,16 @@ export default function Home() {
         <div className="space-y-4 animate-fade-in mb-6 flex-shrink-0 sticky top-0 bg-background z-10 pb-4 border-b">
           <h1 className="text-3xl font-bold animate-slide-down">Hello, {user?.firstName} !</h1>
           <p className="text-muted-foreground">Hope you are having a great day</p>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Profile - 37.5% Completed</span>
+          {profileCompletion < 100 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Profile - {profileCompletion}% Completed</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }}></div>
+              </div>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: "37.5%" }}></div>
-            </div>
-          </div>
+          )}
           <div className="flex items-center gap-4">
             <Button 
               className="transition-smooth hover:scale-105 animate-fade-in"
@@ -272,18 +320,16 @@ export default function Home() {
               <Edit className="h-4 w-4 mr-2" />
               Post
             </Button>
-            <Button variant="outline" className="transition-smooth hover:scale-105 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <Star className="h-4 w-4 mr-2" />
-              Badge
-            </Button>
-            <Button variant="outline" className="transition-smooth hover:scale-105 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <Gift className="h-4 w-4 mr-2" />
-              Reward
-            </Button>
-            <Button variant="outline" className="transition-smooth hover:scale-105 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Schedule 1-on-1
-            </Button>
+            {profileCompletion < 100 && (
+              <Button 
+                variant="outline" 
+                className="transition-smooth hover:scale-105 animate-fade-in"
+                onClick={handleOpenProfileTasks}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Complete Profile
+              </Button>
+            )}
           </div>
         </div>
 
@@ -308,10 +354,25 @@ export default function Home() {
                       style={{ animationDelay: `${idx * 0.1}s` }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-sm font-medium">
-                            {celebration.employeeName.charAt(0)}
-                          </span>
+                        <div className="relative h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          {celebration.profilePicture ? (
+                            <img
+                              src={celebration.profilePicture}
+                              alt={celebration.employeeName}
+                              className="h-10 w-10 rounded-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.querySelector('.avatar-fallback') as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`avatar-fallback h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center ${celebration.profilePicture ? 'hidden' : ''}`}>
+                            <span className="text-sm font-medium">
+                              {celebration.employeeName.charAt(0)}
+                            </span>
+                          </div>
                         </div>
                         <div>
                           <p className="text-sm font-medium">
@@ -324,7 +385,47 @@ export default function Home() {
                           </p>
                         </div>
                       </div>
-                      <Button size="sm">Wish</Button>
+                      <Link href={`/chat?userId=${celebration.id}`}>
+                        <Button 
+                          size="sm"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            try {
+                              // Create or get conversation
+                              const conversations = await chatApi.getConversations();
+                              let conversation = conversations.find(
+                                (c: any) => 
+                                  (c.participant1Id === user?.id && c.participant2Id === celebration.id) ||
+                                  (c.participant2Id === user?.id && c.participant1Id === celebration.id)
+                              );
+                              
+                              if (!conversation) {
+                                // Send a message to create conversation
+                                await chatApi.sendMessage({
+                                  content: "🎉 Happy Birthday! 🎉",
+                                  recipientId: celebration.id,
+                                });
+                                toast.success("Birthday wish sent!", "Your message has been delivered");
+                              } else {
+                                // Send message to existing conversation
+                                await chatApi.sendMessage({
+                                  content: "🎉 Happy Birthday! 🎉",
+                                  conversationId: conversation.id,
+                                });
+                                toast.success("Birthday wish sent!", "Your message has been delivered");
+                              }
+                              // Navigate to chat
+                              window.location.href = `/chat?userId=${celebration.id}`;
+                            } catch (error: any) {
+                              console.error("Failed to send birthday wish:", error);
+                              toast.error("Failed to send birthday wish", error.message || "Please try again");
+                            }
+                          }}
+                        >
+                          <MessageCircle className="h-4 w-4 mr-1" />
+                          Wish
+                        </Button>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -672,10 +773,38 @@ export default function Home() {
                   Inbox
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {inboxPendingCount} Pending task{inboxPendingCount !== 1 ? "s" : ""}
-                </p>
+              <CardContent className="space-y-3">
+                {inboxTasks ? (
+                  <>
+                    <Link href="/inbox">
+                      <div className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Bell className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Pending Tasks</span>
+                        </div>
+                        <span className="text-sm font-semibold">{inboxTasks.pendingTasks}</span>
+                      </div>
+                    </Link>
+                    <Link href="/chat">
+                      <div className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Messages</span>
+                        </div>
+                        <span className="text-sm font-semibold">{inboxTasks.unreadMessages}</span>
+                      </div>
+                    </Link>
+                    <Link href="/inbox">
+                      <Button variant="outline" className="w-full mt-2">
+                        View All
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {inboxPendingCount} Pending task{inboxPendingCount !== 1 ? "s" : ""}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -828,7 +957,109 @@ export default function Home() {
           </div>
         </form>
       </Dialog>
-      </MainLayout>
+
+      {/* Profile Tasks Dialog */}
+      <Dialog open={showProfileTasks} onOpenChange={setShowProfileTasks} title="Complete Your Profile">
+        {loadingTasks ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground animate-pulse">Loading tasks...</div>
+          </div>
+        ) : profileTasks ? (
+          <div className="space-y-6">
+            {/* Progress Summary */}
+            <div className="bg-muted/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Profile Completion</span>
+                <span className="text-sm font-semibold">{profileTasks.percentage}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary h-2 rounded-full transition-all duration-500" 
+                  style={{ width: `${profileTasks.percentage}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {profileTasks.completedTasks} of {profileTasks.totalTasks} tasks completed
+              </p>
+            </div>
+
+            {/* Incomplete Tasks */}
+            {profileTasks.incompleteTasks && profileTasks.incompleteTasks.length > 0 ? (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Tasks to Complete
+                </h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                  {Object.entries(
+                    profileTasks.incompleteTasks.reduce((acc: any, task: any) => {
+                      if (!acc[task.section]) {
+                        acc[task.section] = [];
+                      }
+                      acc[task.section].push(task);
+                      return acc;
+                    }, {})
+                  ).map(([section, tasks]: [string, any]) => (
+                    <div key={section} className="space-y-2">
+                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2 first:pt-0">
+                        {section}
+                      </h4>
+                      {tasks.map((task: any) => (
+                        <Link
+                          key={task.id}
+                          href={task.route}
+                          onClick={() => setShowProfileTasks(false)}
+                          className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                        >
+                          <Circle className="h-5 w-5 text-muted-foreground shrink-0" />
+                          <span className="flex-1 text-sm">{task.label}</span>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                        </Link>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <CheckCircle2 className="h-16 w-16 text-primary mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Profile Complete!</h3>
+                <p className="text-sm text-muted-foreground">
+                  You've completed all profile tasks. Great job!
+                </p>
+              </div>
+            )}
+
+            {/* Completed Tasks (Collapsible) */}
+            {profileTasks.tasks && profileTasks.tasks.filter((t: any) => t.completed).length > 0 && (
+              <details className="space-y-2">
+                <summary className="text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Completed Tasks ({profileTasks.tasks.filter((t: any) => t.completed).length})
+                </summary>
+                <div className="space-y-2 pt-2">
+                  {profileTasks.tasks
+                    .filter((t: any) => t.completed)
+                    .map((task: any) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
+                      >
+                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        <span className="flex-1 text-sm text-muted-foreground line-through">
+                          {task.label}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </details>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-muted-foreground">No tasks available</div>
+          </div>
+        )}
+      </Dialog>
+    </MainLayout>
     </AuthGuard>
   );
 }

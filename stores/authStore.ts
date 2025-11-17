@@ -7,7 +7,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
 
@@ -50,12 +50,41 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw error;
     }
   },
-  logout: () => {
+  logout: async () => {
+    // Get token before clearing for the logout API call
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("access_token")
+        : null;
+
+    // Call backend logout in the background (don't wait for it)
+    // This is best effort - we'll clear local state regardless
+    if (token) {
+      authApi.logout().catch((error: any) => {
+        // Silently fail - local cleanup will happen anyway
+        // Only log unexpected errors
+        if (
+          error?.message &&
+          !error.message.includes("404") &&
+          !error.message.includes("401") &&
+          !error.message.includes("Network")
+        ) {
+          console.error("Backend logout error (non-critical):", error);
+        }
+      });
+    }
+
+    // Immediately clear local state (don't wait for backend)
     apiClient.setToken(null);
     if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      // Clear any other stored data
+      localStorage.clear();
     }
-    set({ user: null, isAuthenticated: false });
+
+    // Clear auth state
+    set({ user: null, isAuthenticated: false, isLoading: false });
   },
   checkAuth: async () => {
     try {

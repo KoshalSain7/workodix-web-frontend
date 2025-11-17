@@ -9,6 +9,10 @@ interface DashboardState {
   tasks: Task[];
   badges: any[];
   inboxPendingCount: number;
+  inboxTasks: {
+    pendingTasks: number;
+    unreadMessages: number;
+  } | null;
   calendarData: any[];
   loading: boolean;
   error: string | null;
@@ -27,6 +31,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   tasks: [],
   badges: [],
   inboxPendingCount: 0,
+  inboxTasks: null,
   calendarData: [],
   loading: false,
   error: null,
@@ -43,6 +48,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
           leaveBalances: data.leaveBalances || [],
           badges: data.badges || [],
           inboxPendingCount: data.inboxTasks?.pendingCount || 0,
+          inboxTasks: data.inboxTasks || null,
           calendarData: data.calendarData || [],
           loading: false,
         });

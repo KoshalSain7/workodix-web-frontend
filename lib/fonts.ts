@@ -24,10 +24,10 @@
  */
 
 export const fonts = {
-  // primary: "Sansation" - Main font for all text
+  // primary: "Stack Sans Headline" - Main font for all text
   // Used in: All body text, headings, buttons, inputs, cards, navigation, etc.
-  // This font is loaded via Google Fonts
-  primary: "Sansation",
+  // This font is loaded via Google Fonts in layout.tsx
+  primary: "Stack Sans Headline",
 
   // fallback: "Arial, Helvetica, sans-serif" - Fallback fonts if primary font fails to load
   // Used in: Font stack fallback for all text

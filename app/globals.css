@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* 
+ * Stack Sans Headline Font
+ * 
+ * This font is loaded via Google Fonts in layout.tsx
+ * Font weights available: 200-700 (variable font)
+ * Font family: "Stack Sans Headline", sans-serif
+ */
+
 :root {
   /* 
    * CSS Variables are now injected dynamically from lib/theme.ts via ThemeProvider

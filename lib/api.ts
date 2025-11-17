@@ -72,7 +72,8 @@ class ApiClient {
       }));
 
     if (!response.ok) {
-      if (response.status === 401) {
+      // Don't try to refresh token on logout endpoint
+      if (response.status === 401 && !endpoint.includes("/auth/logout")) {
         // Try to refresh token
         let refreshToken: string | null = null;
         if (typeof window !== "undefined") {
@@ -198,6 +199,7 @@ export const authApi = {
       "/auth/register",
       data
     ),
+  logout: () => apiClient.post<{ message: string }>("/auth/logout"),
   refresh: (refreshToken: string) =>
     apiClient.post<{ access_token: string }>("/auth/refresh", {
       refreshToken,
@@ -210,6 +212,28 @@ export const usersApi = {
     const url = userId ? `/users/profile?userId=${userId}` : "/users/profile";
     return apiClient.get<{ user: any; employee: any }>(url);
   },
+  getProfileCompletion: () =>
+    apiClient.get<{ percentage: number }>("/users/profile/completion"),
+  getProfileTasks: () =>
+    apiClient.get<{
+      percentage: number;
+      totalTasks: number;
+      completedTasks: number;
+      incompleteTasks: Array<{
+        id: string;
+        label: string;
+        completed: boolean;
+        route: string;
+        section: string;
+      }>;
+      tasks: Array<{
+        id: string;
+        label: string;
+        completed: boolean;
+        route: string;
+        section: string;
+      }>;
+    }>("/users/profile/tasks"),
   updateProfile: (data: any) => apiClient.put<any>("/users/profile", data),
   updateEmployeeProfile: (data: any) =>
     apiClient.put<any>("/users/employee-profile", data),
@@ -310,6 +334,18 @@ export const socialApi = {
     apiClient.get<any[]>(`/social/post/${postId}/comments`),
   deleteComment: (postId: string, commentId: string) =>
     apiClient.post<any>(`/social/post/${postId}/comment/${commentId}/delete`),
+};
+
+// Chat API
+export const chatApi = {
+  getConversations: () => apiClient.get<any[]>("/chat/conversations"),
+  getMessages: (conversationId: string, limit?: number) =>
+    apiClient.get<any[]>(`/chat/conversations/${conversationId}/messages${limit ? `?limit=${limit}` : ""}`),
+  sendMessage: (data: { content: string; conversationId?: string; recipientId?: string }) =>
+    apiClient.post<any>("/chat/messages", data),
+  searchUsers: (query: string, limit?: number) =>
+    apiClient.get<any[]>(`/chat/search-users?q=${encodeURIComponent(query)}${limit ? `&limit=${limit}` : ""}`),
+  getUnreadCount: () => apiClient.get<{ count: number }>("/chat/unread-count"),
 };
 
 // Requests API

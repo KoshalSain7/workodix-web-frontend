@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Grid3x3, FileText, Bell, Clock, User as UserIcon, FileText as FileTextIcon } from "lucide-react";
+import { Search, Grid3x3, FileText, Bell, Clock, User as UserIcon, FileText as FileTextIcon, LogOut } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import { attendanceApi, searchApi } from "@/lib/api";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { toast } from "@/components/ui/toast";
 import { format } from "date-fns";
 
 export function Header() {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const router = useRouter();
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchInTime, setPunchInTime] = useState<string | null>(null);
@@ -385,6 +385,21 @@ export function Header() {
         <button className="p-2 hover:bg-primary-foreground/10 rounded-md transition-colors relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+        </button>
+        <button 
+          onClick={() => {
+            // Call logout (non-blocking - clears state immediately)
+            logout();
+            // Immediately redirect - don't wait for logout to complete
+            if (typeof window !== "undefined") {
+              // Use replace to avoid adding to history and ensure clean redirect
+              window.location.replace("/login");
+            }
+          }}
+          className="p-2 hover:bg-primary-foreground/10 rounded-md transition-colors"
+          title="Logout"
+        >
+          <LogOut className="h-5 w-5" />
         </button>
       </div>
     </header>

@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Chrome } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -67,6 +68,29 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
             </Button>
+            
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                window.location.href = `${apiUrl}/auth/google`;
+              }}
+            >
+              <Chrome className="h-4 w-4 mr-2" />
+              Sign in with Google
+            </Button>
+
             <div className="text-sm text-center text-muted-foreground mt-4">
               <p>Test credentials:</p>
               <p>Email: koshal@workfolio.com</p>
