@@ -1,53 +1,86 @@
 "use client";
 
 import { MainLayout } from "@/components/layout/MainLayout";
+import { AuthGuard } from "@/components/layout/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAttendanceStore } from "@/stores/attendanceStore";
+import { requestsApi } from "@/lib/api";
+import { useAuthStore } from "@/stores/authStore";
+import { toast } from "@/components/ui/toast";
 import { useState } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { RequestType } from "@/types";
 
 export default function OnDutyPage() {
-  const { selectedDate, setSelectedDate, addLeaveRequest } = useAttendanceStore();
+  const { user } = useAuthStore();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [location, setLocation] = useState("");
   const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (selectedDate) {
-      addLeaveRequest({
-        id: Date.now().toString(),
-        employeeId: "1",
-        type: "On Duty",
-        startDate: format(selectedDate, "yyyy-MM-dd"),
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        reason: `${location ? `Location: ${location}. ` : ""}${reason}`,
-        status: "Pending",
-        requestedAt: new Date().toISOString(),
+  const handleSubmit = async () => {
+    if (!selectedDate) {
+      toast.error("Validation Error", "Please select a start date");
+      return;
+    }
+
+    if (endDate && endDate < selectedDate) {
+      toast.error("Validation Error", "End date must be after start date");
+      return;
+    }
+
+    if (!reason.trim()) {
+      toast.error("Validation Error", "Please provide a reason");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const description = `${location ? `Location: ${location}\n\n` : ""}Reason: ${reason}`;
+      
+      await requestsApi.create({
+        type: RequestType.ON_DUTY,
+        requestTo: "HR",
+        title: `On Duty Request - ${user?.firstName} ${user?.lastName}`,
+        description: description,
+        requestData: {
+          startDate: format(selectedDate, "yyyy-MM-dd"),
+          endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+          location: location || undefined,
+          reason: reason,
+        },
       });
+
+      toast.success("On Duty Request Submitted", "Your on duty request has been submitted successfully");
       setSelectedDate(null);
       setEndDate(null);
       setLocation("");
       setReason("");
-      alert("On Duty request submitted successfully!");
+    } catch (error: any) {
+      console.error("Failed to submit on duty request:", error);
+      toast.error("Submission Failed", error.message || "Please try again");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">On Duty Request</h1>
-        </div>
+    <AuthGuard>
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">On Duty Request</h1>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -116,8 +149,9 @@ export default function OnDutyPage() {
                   <Button
                     onClick={handleSubmit}
                     className="w-full bg-primary"
+                    disabled={isSubmitting}
                   >
-                    Submit On Duty Request
+                    {isSubmitting ? "Submitting..." : "Submit On Duty Request"}
                   </Button>
                 </>
               ) : (
@@ -129,7 +163,8 @@ export default function OnDutyPage() {
           </Card>
         </div>
       </div>
-    </MainLayout>
+      </MainLayout>
+    </AuthGuard>
   );
 }
 

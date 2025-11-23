@@ -113,3 +113,47 @@ export interface ApiError {
   timestamp: string;
   path?: string;
 }
+
+export enum RequestType {
+  ASSET = 'Asset',
+  CHANGE_GOAL = 'Change goal',
+  CONFIRM_INVEST = 'Confirm invest',
+  EXPENSE = 'Expense',
+  EXPENSE_ADVANCE = 'Expense advance',
+  HELPDESK_TICKET = 'Helpdesk ticket',
+  JOB_OPENING = 'Job opening',
+  LOAN = 'Loan',
+  ON_DUTY = 'On duty',
+  PROPOSE_INVEST = 'Propose invest',
+  REIMBURSEMENT = 'Reimbursement',
+  RESIGNATION = 'Resignation',
+  RESTRICTED_HOLIDAY = 'Restricted holiday',
+  SHORT_LEAVE = 'Short leave',
+  TRAVEL = 'Travel',
+  VARIABLE = 'Variable',
+}
+
+export enum RequestStatus {
+  PENDING = 'Pending',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
+  IN_PROGRESS = 'In Progress',
+  COMPLETED = 'Completed',
+}
+
+export interface HelpdeskRequest {
+  id: string;
+  userId: string;
+  type: RequestType;
+  title: string;
+  description?: string;
+  status: RequestStatus;
+  isResolved: boolean;
+  attachments?: Array<{
+    name: string;
+    url: string;
+    type: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}

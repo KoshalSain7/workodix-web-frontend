@@ -1,52 +1,71 @@
 "use client";
 
 import { MainLayout } from "@/components/layout/MainLayout";
+import { AuthGuard } from "@/components/layout/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAttendanceStore } from "@/stores/attendanceStore";
+import { leaveApi } from "@/lib/api";
+import { toast } from "@/components/ui/toast";
 import { useState } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default function LeaveRequestPage() {
-  const { selectedDate, setSelectedDate, addLeaveRequest } = useAttendanceStore();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [leaveType, setLeaveType] = useState("Planned Leave");
   const [reason, setReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (selectedDate) {
-      addLeaveRequest({
-        id: Date.now().toString(),
-        employeeId: "1",
-        type: "Leave",
+  const handleSubmit = async () => {
+    if (!selectedDate) {
+      toast.error("Validation Error", "Please select a start date");
+      return;
+    }
+
+    if (endDate && endDate < selectedDate) {
+      toast.error("Validation Error", "End date must be after start date");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await leaveApi.createRequest({
+        type: leaveType,
         startDate: format(selectedDate, "yyyy-MM-dd"),
         endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-        reason,
-        status: "Pending",
-        requestedAt: new Date().toISOString(),
+        isHalfDay: false,
+        reason: reason || undefined,
       });
+
+      toast.success("Leave Request Submitted", "Your leave request has been submitted successfully");
       setSelectedDate(null);
       setEndDate(null);
       setReason("");
-      alert("Leave request submitted successfully!");
+      setLeaveType("Planned Leave");
+    } catch (error: any) {
+      console.error("Failed to submit leave request:", error);
+      toast.error("Submission Failed", error.message || "Please try again");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <MainLayout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Apply Leave</h1>
-        </div>
+    <AuthGuard>
+      <MainLayout>
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Apply Leave</h1>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -119,8 +138,9 @@ export default function LeaveRequestPage() {
                   <Button
                     onClick={handleSubmit}
                     className="w-full bg-primary"
+                    disabled={isSubmitting}
                   >
-                    Submit Leave Request
+                    {isSubmitting ? "Submitting..." : "Submit Leave Request"}
                   </Button>
                 </>
               ) : (
@@ -133,6 +153,7 @@ export default function LeaveRequestPage() {
         </div>
       </div>
     </MainLayout>
+    </AuthGuard>
   );
 }
 

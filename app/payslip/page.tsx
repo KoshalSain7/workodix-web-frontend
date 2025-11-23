@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/authStore";
 import { payrollApi } from "@/lib/api";
+import { toast } from "@/components/ui/toast";
 import { Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 
@@ -20,10 +21,14 @@ export default function PayslipPage() {
 
   const loadPayslips = async () => {
     try {
-      const data = await payrollApi.getPayslips();
-      setPayslips(data);
-    } catch (error) {
+      setLoading(true);
+      const response = await payrollApi.getPayslips();
+      const payslips = Array.isArray(response) ? response : [];
+      setPayslips(payslips);
+    } catch (error: any) {
       console.error("Failed to load payslips:", error);
+      toast.error("Failed to load payslips", error.message || "Please try again");
+      setPayslips([]);
     } finally {
       setLoading(false);
     }

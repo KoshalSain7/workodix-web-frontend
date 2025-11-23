@@ -392,6 +392,17 @@ export const quizApi = {
   seedQuestions: () => apiClient.post<any>("/quiz/seed"),
 };
 
+// Job Openings API
+export const jobOpeningsApi = {
+  getAll: (activeOnly: boolean = true) =>
+    apiClient.get<any[]>(`/job-openings?activeOnly=${activeOnly}`),
+  getOne: (id: string) => apiClient.get<any>(`/job-openings/${id}`),
+  create: (data: any) => apiClient.post<any>("/job-openings", data),
+  update: (id: string, data: any) =>
+    apiClient.put<any>(`/job-openings/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/job-openings/${id}`),
+};
+
 // Search API
 export const searchApi = {
   search: (query: string, limit?: number) => {

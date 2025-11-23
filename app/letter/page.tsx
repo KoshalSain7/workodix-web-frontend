@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { letterApi } from "@/lib/api";
+import { toast } from "@/components/ui/toast";
 import { FileText, Plus, Download, Clock, CheckCircle, XCircle } from "lucide-react";
 
 const letterTypes = [
@@ -33,10 +34,14 @@ export default function LetterPage() {
 
   const loadRequests = async () => {
     try {
-      const data = await letterApi.getAll();
-      setRequests(data);
-    } catch (error) {
+      setLoading(true);
+      const response = await letterApi.getAll();
+      const requests = Array.isArray(response) ? response : [];
+      setRequests(requests);
+    } catch (error: any) {
       console.error("Failed to load letter requests:", error);
+      toast.error("Failed to load letter requests", error.message || "Please try again");
+      setRequests([]);
     } finally {
       setLoading(false);
     }
@@ -46,11 +51,13 @@ export default function LetterPage() {
     e.preventDefault();
     try {
       await letterApi.create(formData);
+      toast.success("Request Submitted", "Letter request has been submitted successfully");
       setShowForm(false);
       setFormData({ type: "", customType: "", purpose: "" });
       await loadRequests();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create letter request:", error);
+      toast.error("Submission Failed", error.message || "Please try again");
     }
   };
 

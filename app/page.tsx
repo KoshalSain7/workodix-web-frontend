@@ -11,7 +11,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { socialApi, usersApi, chatApi } from "@/lib/api";
+import { socialApi, usersApi, chatApi, jobOpeningsApi } from "@/lib/api";
 import { toast } from "@/components/ui/toast";
 import {
   Edit,
@@ -67,6 +67,8 @@ export default function Home() {
   const [showProfileTasks, setShowProfileTasks] = useState(false);
   const [profileTasks, setProfileTasks] = useState<any>(null);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [jobOpenings, setJobOpenings] = useState<any[]>([]);
+  const [loadingJobOpenings, setLoadingJobOpenings] = useState(false);
 
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const feedColumnRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,21 @@ export default function Home() {
   useEffect(() => {
     fetchDashboard();
     loadProfileCompletion();
+    loadJobOpenings();
   }, [fetchDashboard]);
+
+  const loadJobOpenings = async () => {
+    try {
+      setLoadingJobOpenings(true);
+      const openings = await jobOpeningsApi.getAll(true);
+      setJobOpenings(Array.isArray(openings) ? openings : []);
+    } catch (error: any) {
+      console.error("Failed to load job openings:", error);
+      setJobOpenings([]);
+    } finally {
+      setLoadingJobOpenings(false);
+    }
+  };
 
   const loadProfileCompletion = async () => {
     try {
@@ -303,12 +319,10 @@ export default function Home() {
           <h1 className="text-3xl font-bold animate-slide-down">Hello, {user?.firstName} !</h1>
           <p className="text-muted-foreground">Hope you are having a great day</p>
           {profileCompletion < 100 && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Profile - {profileCompletion}% Completed</span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }}></div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium">Profile - {profileCompletion}% Completed</span>
+              <div className="w-24 bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-primary h-1.5 rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }}></div>
               </div>
             </div>
           )}
@@ -478,6 +492,49 @@ export default function Home() {
                   <Link href="/wall-of-fame" className="text-sm text-primary hover:underline">
                     See more
                   </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Openings */}
+            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Job Openings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {loadingJobOpenings ? (
+                    <div className="text-center py-4 text-muted-foreground animate-pulse">
+                      Loading...
+                    </div>
+                  ) : jobOpenings.length > 0 ? (
+                    <div className="space-y-3">
+                      {jobOpenings.slice(0, 3).map((opening, idx) => (
+                        <div
+                          key={opening.id}
+                          className="p-3 bg-muted rounded-lg transition-smooth hover:bg-muted/80 animate-slide-up"
+                          style={{ animationDelay: `${idx * 0.1}s` }}
+                        >
+                          <p className="text-sm font-medium mb-1">{opening.title}</p>
+                          {opening.department && (
+                            <p className="text-xs text-muted-foreground">
+                              {opening.department}
+                              {opening.location && ` • ${opening.location}`}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-muted-foreground">
+                        No job openings
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
