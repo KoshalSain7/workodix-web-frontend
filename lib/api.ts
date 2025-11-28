@@ -210,10 +210,8 @@ export const authApi = {
 export const usersApi = {
   getProfile: (userId?: string) => {
     const url = userId ? `/users/profile?userId=${userId}` : "/users/profile";
-    return apiClient.get<{ user: any; employee: any }>(url);
+    return apiClient.get<{ user: any; employee: any; percentage: number }>(url);
   },
-  getProfileCompletion: () =>
-    apiClient.get<{ percentage: number }>("/users/profile/completion"),
   getProfileTasks: () =>
     apiClient.get<{
       percentage: number;
@@ -404,6 +402,23 @@ export const jobOpeningsApi = {
 };
 
 // Search API
+// Access API
+export const accessApi = {
+  getMyOptions: (roles?: string) => {
+    const url = roles 
+      ? `/access/my-options?roles=${encodeURIComponent(roles)}`
+      : "/access/my-options";
+    return apiClient.get<any[]>(url);
+  },
+  getMyOptionsCategorized: () => apiClient.get<any>("/access/my-options/categorized"),
+  getAll: () => apiClient.get<any[]>("/access"),
+  create: (data: any) => apiClient.post<any>("/access", data),
+  update: (id: string, data: any) => apiClient.put<any>(`/access/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/access/${id}`),
+  updateRoleAccess: (role: string, optionIds: string[]) =>
+    apiClient.put<any>(`/access/role/${role}`, { optionIds }),
+};
+
 export const searchApi = {
   search: (query: string, limit?: number) => {
     const params = new URLSearchParams();

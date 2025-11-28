@@ -95,7 +95,8 @@ export default function Home() {
     fetchDashboard();
     loadProfileCompletion();
     loadJobOpenings();
-  }, [fetchDashboard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const loadJobOpenings = async () => {
     try {
@@ -112,8 +113,9 @@ export default function Home() {
 
   const loadProfileCompletion = async () => {
     try {
-      const response = await usersApi.getProfileCompletion();
-      setProfileCompletion(response.percentage || 0);
+      // Get percentage from profile API instead of separate completion API
+      const profile = await usersApi.getProfile();
+      setProfileCompletion(profile.percentage || 0);
     } catch (error: any) {
       console.error("Failed to load profile completion:", error);
       // Set to 0 if there's an error
@@ -138,8 +140,9 @@ export default function Home() {
     setShowProfileTasks(true);
     // Always refresh tasks to get latest completion status
     await loadProfileTasks();
-    // Also refresh the completion percentage
-    await loadProfileCompletion();
+    // Also refresh the completion percentage from profile API
+    const profile = await usersApi.getProfile();
+    setProfileCompletion(profile.percentage || 0);
   };
 
   // Load comments when comment section is opened
@@ -249,7 +252,9 @@ export default function Home() {
       // Refresh dashboard to show new post
       await fetchDashboard();
       // Refresh profile completion since creating a post affects it
-      await loadProfileCompletion();
+      // Get percentage from profile API
+      const profile = await usersApi.getProfile();
+      setProfileCompletion(profile.percentage || 0);
     } catch (error: any) {
       console.error("Failed to create post:", error);
       toast.error("Failed to create post", error.message || "Please try again");

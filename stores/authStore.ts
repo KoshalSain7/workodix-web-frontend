@@ -1,20 +1,25 @@
 import { create } from "zustand";
 import { Employee } from "@/types";
-import { authApi, apiClient, usersApi } from "@/lib/api";
+import { authApi, apiClient, usersApi, accessApi } from "@/lib/api";
 
 interface AuthState {
   user: Employee | null;
+  accessibleOptions: any[] | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoadingOptions: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  loadAccessibleOptions: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
+  accessibleOptions: null,
   isAuthenticated: false,
   isLoading: true,
+  isLoadingOptions: false,
   login: async (email: string, password: string) => {
     try {
       const response = await authApi.login(email, password);
@@ -31,7 +36,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           lastName: response.user.lastName,
           email: response.user.email,
           company: response.user.company || "",
-          role: response.user.role || "",
+          roles: response.user.roles || [],
           prefix: response.user.prefix || "",
           phone: response.user.phone || "",
           dateOfBirth: response.user.dateOfBirth || "",
@@ -40,11 +45,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           profilePicture: response.user.profilePicture || "",
           signature: response.user.signature || "",
         },
+        accessibleOptions: (response as any).accessibleOptions || [],
         isAuthenticated: true,
         isLoading: false,
       });
       // Fetch full profile
       await get().checkAuth();
+      // Load accessible options if not already loaded
+      if (
+        !(response as any).accessibleOptions ||
+        (response as any).accessibleOptions.length === 0
+      ) {
+        await get().loadAccessibleOptions();
+      }
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -84,7 +97,63 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     // Clear auth state
-    set({ user: null, isAuthenticated: false, isLoading: false });
+    set({
+      user: null,
+      accessibleOptions: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  },
+  loadAccessibleOptions: async () => {
+    // Prevent multiple simultaneous calls
+    if (get().isLoadingOptions) {
+      return;
+    }
+    
+    // If already loaded, don't reload
+    if (get().accessibleOptions && get().accessibleOptions.length > 0) {
+      return;
+    }
+
+    try {
+      set({ isLoadingOptions: true });
+      
+      // Get roles from current user state (already loaded in checkAuth or login)
+      const currentUser = get().user;
+      const userRoles = currentUser?.roles || [];
+      
+      // If no roles in state, fetch profile once
+      if (userRoles.length === 0) {
+        const profile = await usersApi.getProfile();
+        const roles = profile.user?.roles || [];
+        // Update user state with roles
+        set({ user: { ...currentUser!, roles } as Employee });
+        
+        // Use roles from profile
+        if (roles.length > 0) {
+          const rolesQuery = roles.join(',');
+          const options = await accessApi.getMyOptions(rolesQuery);
+          const optionsArray = Array.isArray(options) ? options : [];
+          set({ accessibleOptions: optionsArray, isLoadingOptions: false });
+          return;
+        }
+      } else {
+        // Use roles from state
+        const rolesQuery = userRoles.join(',');
+        const options = await accessApi.getMyOptions(rolesQuery);
+        const optionsArray = Array.isArray(options) ? options : [];
+        set({ accessibleOptions: optionsArray, isLoadingOptions: false });
+        return;
+      }
+      
+      // Fallback: try without roles (will use JWT roles from backend)
+      const options = await accessApi.getMyOptions();
+      const optionsArray = Array.isArray(options) ? options : [];
+      set({ accessibleOptions: optionsArray, isLoadingOptions: false });
+    } catch (error) {
+      console.error("Failed to load accessible options:", error);
+      set({ accessibleOptions: [], isLoadingOptions: false });
+    }
   },
   checkAuth: async () => {
     try {
@@ -106,7 +175,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           lastName: profile.user.lastName,
           email: profile.user.email,
           company: profile.user.company || "XYX Private Limited",
-          role: profile.user.role || "",
+          roles: profile.user.roles || [],
           prefix: profile.user.prefix || "",
           phone: profile.user.phone || "",
           dateOfBirth: profile.user.dateOfBirth || "",
@@ -118,8 +187,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+      // Load accessible options only if not already loaded
+      if (!get().accessibleOptions || get().accessibleOptions.length === 0) {
+        await get().loadAccessibleOptions();
+      }
     } catch (error) {
-      set({ isLoading: false, isAuthenticated: false });
+      set({
+        isLoading: false,
+        isAuthenticated: false,
+        accessibleOptions: null,
+      });
       if (typeof window !== "undefined") {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");

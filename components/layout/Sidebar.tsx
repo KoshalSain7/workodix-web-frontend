@@ -10,7 +10,6 @@ import {
   MoreHorizontal,
   Search,
   LogOut,
-  QrCode,
   User,
   Calendar,
   Briefcase,
@@ -18,58 +17,88 @@ import {
   BookOpen,
   FileText,
   DollarSign,
-  Mail,
   Settings,
-  Gift,
   MessageCircle,
-  Folder,
-  TrendingUp,
   Receipt,
-  Plane,
   Clock,
-  Building,
-  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/stores/authStore";
+import { accessApi } from "@/lib/api";
 
-const navigation = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Inbox", href: "/inbox", icon: Inbox },
-  { name: "Helpdesk", href: "/helpdesk", icon: Settings },
-];
+// Icon mapping from backend icon names to React components
+const iconMap: Record<string, any> = {
+  Home,
+  Inbox,
+  User,
+  Calendar,
+  Briefcase,
+  Target,
+  BookOpen,
+  FileText,
+  DollarSign,
+  Settings,
+  Receipt,
+  Clock,
+};
 
-const favorites = [
-  { name: "Social profile", href: "/profile/social", icon: User },
-  { name: "Attendance", href: "/attendance", icon: Calendar },
-  { name: "CTC", href: "/ctc", icon: DollarSign },
-  { name: "Goals and initiatives", href: "/goals", icon: Target },
-  { name: "HR Handbook", href: "/handbook", icon: BookOpen },
-  { name: "Leave balance", href: "/leave-balance", icon: Calendar },
-  { name: "Letter", href: "/letter", icon: FileText },
-  { name: "Payslip", href: "/payslip", icon: Receipt },
-  { name: "Profile", href: "/profile", icon: User },
-];
-
-const requests = [
-  { name: "Job opening", href: "/request/job-opening", icon: Briefcase },
-  { name: "Leave", href: "/request/leave", icon: Calendar },
-  { name: "On duty", href: "/request/on-duty", icon: Clock },
-  { name: "Resignation", href: "/request/resignation", icon: FileText },
-];
-
-// Combine all searchable items
-const allSearchableItems = [
-  ...navigation.map((item) => ({ ...item, category: "Navigation" })),
-  ...favorites.map((item) => ({ ...item, category: "Favorites" })),
-  ...requests.map((item) => ({ ...item, category: "Request" })),
-];
+// Helper function to get icon component from icon name
+const getIcon = (iconName: string | null | undefined) => {
+  if (!iconName) return null;
+  return iconMap[iconName] || FileText; // Default to FileText if icon not found
+};
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { accessibleOptions, loadAccessibleOptions } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const sidebarRef = useRef<HTMLAsideElement>(null);
+
+  // Load accessible options on mount (only once)
+  useEffect(() => {
+    if (!accessibleOptions || accessibleOptions.length === 0) {
+      loadAccessibleOptions();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
+  // Group accessible options by category
+  const groupedOptions = useMemo(() => {
+    if (!accessibleOptions || accessibleOptions.length === 0) {
+      return {
+        Navigation: [],
+        Favorites: [],
+        Request: [],
+      };
+    }
+
+    const grouped: Record<string, any[]> = {
+      Navigation: [],
+      Favorites: [],
+      Request: [],
+    };
+
+    accessibleOptions.forEach((option: any) => {
+      const category = option.category || "Navigation";
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push({
+        name: option.optionName,
+        href: option.optionPath,
+        icon: getIcon(option.icon),
+        category: category,
+      });
+    });
+
+    return grouped;
+  }, [accessibleOptions]);
+
+  // Combine all searchable items
+  const allSearchableItems = useMemo(() => {
+    return Object.values(groupedOptions).flat();
+  }, [groupedOptions]);
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {
@@ -81,7 +110,7 @@ export function Sidebar() {
     return allSearchableItems.filter((item) =>
       item.name.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, allSearchableItems]);
 
   // Auto-expand on hover, collapse when mouse leaves
   useEffect(() => {
@@ -137,7 +166,7 @@ export function Sidebar() {
                 <nav className="space-y-1">
                   {filteredItems.map((item) => {
                     const isActive = pathname === item.href;
-                    const Icon = item.icon || null;
+                    const Icon = item.icon || FileText;
                     return (
                       <Link
                         key={`${item.category}-${item.name}`}
@@ -149,12 +178,10 @@ export function Sidebar() {
                             : "text-foreground hover:bg-muted/50"
                         )}
                       >
-                        {Icon && (
-                          <Icon className={cn(
-                            "h-5 w-5 shrink-0",
-                            isActive ? "text-white" : "text-foreground"
-                          )} />
-                        )}
+                        <Icon className={cn(
+                          "h-5 w-5 shrink-0",
+                          isActive ? "text-white" : "text-foreground"
+                        )} />
                         <span className={cn("transition-opacity duration-300", isExpanded ? "opacity-100" : "opacity-0 w-0")}>
                           {item.name}
                         </span>
@@ -181,131 +208,137 @@ export function Sidebar() {
           // Normal View (all sections - show everything when no search)
           <>
             {/* Main Navigation */}
-            <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center text-sm transition-all duration-200 relative group",
-                      isExpanded 
-                        ? "gap-3 px-3 py-2.5 rounded-lg w-full"
-                        : "justify-center w-10 h-10 rounded-lg",
-                      isActive
-                        ? "bg-primary text-white font-semibold shadow-lg"
-                        : "text-foreground hover:bg-muted/50"
-                    )}
-                    title={!isExpanded ? item.name : undefined}
-                  >
-                    <Icon className={cn(
-                      "shrink-0 transition-all duration-200",
-                      "h-5 w-5",
-                      isActive 
-                        ? "text-white"
-                        : "text-foreground group-hover:text-primary"
-                    )} />
-                    {isExpanded && (
-                      <span className="transition-all duration-300 whitespace-nowrap">
-                        {item.name}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
+            {groupedOptions.Navigation.length > 0 && (
+              <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
+                {groupedOptions.Navigation.map((item) => {
+                  const Icon = item.icon || FileText;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        "flex items-center text-sm transition-all duration-200 relative group",
+                        isExpanded 
+                          ? "gap-3 px-3 py-2.5 rounded-lg w-full"
+                          : "justify-center w-10 h-10 rounded-lg",
+                        isActive
+                          ? "bg-primary text-white font-semibold shadow-lg"
+                          : "text-foreground hover:bg-muted/50"
+                      )}
+                      title={!isExpanded ? item.name : undefined}
+                    >
+                      <Icon className={cn(
+                        "shrink-0 transition-all duration-200",
+                        "h-5 w-5",
+                        isActive 
+                          ? "text-white"
+                          : "text-foreground group-hover:text-primary"
+                      )} />
+                      {isExpanded && (
+                        <span className="transition-all duration-300 whitespace-nowrap">
+                          {item.name}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
 
             {/* Favorites */}
-            <div>
-              {isExpanded && (
-                <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
-                  <Star className="h-4 w-4" />
-                  <span>Favorites</span>
-                </div>
-              )}
-              <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
-                {favorites.map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center text-sm transition-all duration-200 relative group",
-                        isExpanded 
-                          ? "gap-3 px-3 py-2.5 rounded-lg w-full"
-                          : "justify-center w-10 h-10 rounded-lg",
-                        isActive
-                          ? "bg-primary text-white font-semibold shadow-lg"
-                          : "text-foreground hover:bg-muted/50"
-                      )}
-                      title={!isExpanded ? item.name : undefined}
-                    >
-                      <Icon className={cn(
-                        "shrink-0 transition-all duration-200",
-                        "h-5 w-5",
-                        isActive 
-                          ? "text-white"
-                          : "text-foreground group-hover:text-primary"
-                      )} />
-                      {isExpanded && (
-                        <span className="transition-all duration-300 whitespace-nowrap">
-                          {item.name}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+            {groupedOptions.Favorites.length > 0 && (
+              <div>
+                {isExpanded && (
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
+                    <Star className="h-4 w-4" />
+                    <span>Favorites</span>
+                  </div>
+                )}
+                <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
+                  {groupedOptions.Favorites.map((item) => {
+                    const Icon = item.icon || FileText;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center text-sm transition-all duration-200 relative group",
+                          isExpanded 
+                            ? "gap-3 px-3 py-2.5 rounded-lg w-full"
+                            : "justify-center w-10 h-10 rounded-lg",
+                          isActive
+                            ? "bg-primary text-white font-semibold shadow-lg"
+                            : "text-foreground hover:bg-muted/50"
+                        )}
+                        title={!isExpanded ? item.name : undefined}
+                      >
+                        <Icon className={cn(
+                          "shrink-0 transition-all duration-200",
+                          "h-5 w-5",
+                          isActive 
+                            ? "text-white"
+                            : "text-foreground group-hover:text-primary"
+                        )} />
+                        {isExpanded && (
+                          <span className="transition-all duration-300 whitespace-nowrap">
+                            {item.name}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+            )}
 
             {/* Request */}
-            <div>
-              {isExpanded && (
-                <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span>Request</span>
-                </div>
-              )}
-              <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
-                {requests.map((item) => {
-                  const isActive = pathname === item.href;
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "flex items-center text-sm transition-all duration-200 relative group",
-                        isExpanded 
-                          ? "gap-3 px-3 py-2.5 rounded-lg w-full"
-                          : "justify-center w-10 h-10 rounded-lg",
-                        isActive
-                          ? "bg-primary text-white font-semibold shadow-lg"
-                          : "text-foreground hover:bg-muted/50"
-                      )}
-                      title={!isExpanded ? item.name : undefined}
-                    >
-                      <Icon className={cn(
-                        "shrink-0 transition-all duration-200",
-                        "h-5 w-5",
-                        isActive 
-                          ? "text-white"
-                          : "text-foreground group-hover:text-primary"
-                      )} />
-                      {isExpanded && (
-                        <span className="transition-all duration-300 whitespace-nowrap">
-                          {item.name}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+            {groupedOptions.Request.length > 0 && (
+              <div>
+                {isExpanded && (
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span>Request</span>
+                  </div>
+                )}
+                <nav className={cn("space-y-2", !isExpanded && "flex flex-col items-center")}>
+                  {groupedOptions.Request.map((item) => {
+                    const Icon = item.icon || FileText;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center text-sm transition-all duration-200 relative group",
+                          isExpanded 
+                            ? "gap-3 px-3 py-2.5 rounded-lg w-full"
+                            : "justify-center w-10 h-10 rounded-lg",
+                          isActive
+                            ? "bg-primary text-white font-semibold shadow-lg"
+                            : "text-foreground hover:bg-muted/50"
+                        )}
+                        title={!isExpanded ? item.name : undefined}
+                      >
+                        <Icon className={cn(
+                          "shrink-0 transition-all duration-200",
+                          "h-5 w-5",
+                          isActive 
+                            ? "text-white"
+                            : "text-foreground group-hover:text-primary"
+                        )} />
+                        {isExpanded && (
+                          <span className="transition-all duration-300 whitespace-nowrap">
+                            {item.name}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </div>
+            )}
 
             {/* Other Links */}
             <div className="space-y-1 pt-4 border-t border-border">

@@ -249,7 +249,7 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: transparent;
+  background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   transition: background-color 0.3s ease;
 }

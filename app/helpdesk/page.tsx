@@ -127,11 +127,11 @@ export default function HelpdeskPage() {
   const [loadingRequests, setLoadingRequests] = useState(false);
 
   // Check if user is admin, HR, Director, or Manager
-  const userRole = user?.role?.toLowerCase() || "";
-  const isAdmin = userRole === "admin";
-  const isHR = userRole === "hr";
-  const isDirector = userRole === "director";
-  const isManager = userRole === "manager";
+  const userRoles = user?.roles || [];
+  const isAdmin = userRoles.some((r: string) => r.toLowerCase() === "admin");
+  const isHR = userRoles.some((r: string) => r.toLowerCase() === "hr");
+  const isDirector = userRoles.some((r: string) => r.toLowerCase() === "director");
+  const isManager = userRoles.some((r: string) => r.toLowerCase() === "manager");
   const canViewReceivedRequests = isAdmin || isHR || isDirector || isManager;
 
   useEffect(() => {
@@ -169,16 +169,30 @@ export default function HelpdeskPage() {
       
       // Received requests: requests assigned to my role (for admins/HRs/Directors/Managers)
       const receivedReqs = requests.filter((req: Request) => {
-        if (String(req.userId) === String(user.id)) return false; // Don't show my own requests in received
+        // Don't show my own requests in received section
+        if (String(req.userId) === String(user.id)) return false;
+        
+        // Must have a requestTo value
         if (!req.requestTo) return false;
         
-        return (
-          (req.requestTo === "Admin" && isAdmin) ||
-          (req.requestTo === "HR" && isHR) ||
-          (req.requestTo === "Director" && isDirector) ||
-          (req.requestTo === "Manager" && isManager)
+        // Match requestTo with user roles (case-insensitive)
+        const requestToLower = req.requestTo.toLowerCase().trim();
+        const matchesRole = (
+          (requestToLower === "admin" && isAdmin) ||
+          (requestToLower === "hr" && isHR) ||
+          (requestToLower === "director" && isDirector) ||
+          (requestToLower === "manager" && isManager)
         );
+        
+        return matchesRole;
       });
+      
+      console.log('All requests:', requests.length);
+      console.log('My requests:', myReqs.length);
+      console.log('Received requests:', receivedReqs.length);
+      console.log('User roles:', userRoles);
+      console.log('Is HR:', isHR);
+      console.log('Is Admin:', isAdmin);
       
       setMyRequests(myReqs);
       setReceivedRequests(receivedReqs);
@@ -510,7 +524,7 @@ export default function HelpdeskPage() {
                       <p>No requests submitted yet</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent' }}>
                       {myRequests.map((request) => (
                         <div
                           key={request.id}
@@ -557,7 +571,7 @@ export default function HelpdeskPage() {
                         <p>No requests received yet</p>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent' }}>
                         {receivedRequests.map((request) => (
                           <div
                             key={request.id}

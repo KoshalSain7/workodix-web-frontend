@@ -11,7 +11,7 @@ export interface Employee {
   gender: string;
   bloodGroup?: string;
   company: string;
-  role: string;
+  roles: string[]; // Changed from role: string to roles: string[]
   department?: string;
   profilePicture?: string;
   signature?: string;
