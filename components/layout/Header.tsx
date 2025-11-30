@@ -180,19 +180,45 @@ export function Header() {
   const handlePunchIn = async () => {
     try {
       setLoading(true);
-      await attendanceApi.punchIn();
-      setIsPunchedIn(true);
-      setPunchInTime(format(new Date(), "HH:mm"));
-      toast.success(
-        "Successfully Punched In!",
-        `Punch in time: ${format(new Date(), "HH:mm")}`
+      // Get location first
+      if (!navigator.geolocation) {
+        toast.error("Location Required", "Geolocation is not supported. Please use the attendance page for geolocation-based punch.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const result = await attendanceApi.punchWithLocation(latitude, longitude);
+            setIsPunchedIn(true);
+            setPunchInTime(format(new Date(), "HH:mm"));
+            toast.success(
+              "Successfully Punched In!",
+              `Punch in time: ${format(new Date(), "HH:mm")}`
+            );
+          } catch (error: any) {
+            toast.error(
+              error.message || "Failed to punch in",
+              "Please try again later"
+            );
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          toast.error(
+            "Location Required",
+            "Please enable location access to punch in. Use the attendance page for geolocation-based punch."
+          );
+          setLoading(false);
+        }
       );
     } catch (error: any) {
       toast.error(
         error.message || "Failed to punch in",
         "Please try again later"
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -200,20 +226,46 @@ export function Header() {
   const handlePunchOut = async () => {
     try {
       setLoading(true);
-      const result = await attendanceApi.punchOut();
-      setIsPunchedIn(false);
-      setPunchInTime(null);
-      const hoursWorked = result?.hoursWorked || 0;
-      toast.success(
-        "Successfully Punched Out!",
-        `Total hours worked: ${hoursWorked.toFixed(2)} hours`
+      // Get location first
+      if (!navigator.geolocation) {
+        toast.error("Location Required", "Geolocation is not supported. Please use the attendance page for geolocation-based punch.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const result = await attendanceApi.punchWithLocation(latitude, longitude);
+            setIsPunchedIn(false);
+            setPunchInTime(null);
+            const hoursWorked = result?.hoursWorked || 0;
+            toast.success(
+              "Successfully Punched Out!",
+              `Total hours worked: ${hoursWorked.toFixed(2)} hours`
+            );
+          } catch (error: any) {
+            toast.error(
+              error.message || "Failed to punch out",
+              "Please try again later"
+            );
+          } finally {
+            setLoading(false);
+          }
+        },
+        (err) => {
+          toast.error(
+            "Location Required",
+            "Please enable location access to punch out. Use the attendance page for geolocation-based punch."
+          );
+          setLoading(false);
+        }
       );
     } catch (error: any) {
       toast.error(
         error.message || "Failed to punch out",
         "Please try again later"
       );
-    } finally {
       setLoading(false);
     }
   };

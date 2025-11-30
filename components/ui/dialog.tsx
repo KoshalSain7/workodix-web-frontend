@@ -3,43 +3,92 @@
 import { X } from "lucide-react";
 import { Button } from "./button";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import React, { createContext, useContext } from "react";
+
+interface DialogContextType {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const DialogContext = createContext<DialogContextType | null>(null);
 
 interface DialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title?: string;
   children: React.ReactNode;
 }
 
-export function Dialog({ open, onOpenChange, title, children }: DialogProps) {
-  if (!open) return null;
+export function Dialog({ open, onOpenChange, children }: DialogProps) {
+  return (
+    <DialogContext.Provider value={{ open, onOpenChange }}>
+      {children}
+    </DialogContext.Provider>
+  );
+}
+
+export function DialogTrigger({ 
+  asChild, 
+  children, 
+  onClick 
+}: { 
+  asChild?: boolean; 
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  const context = useContext(DialogContext);
+  
+  const handleClick = (e: any) => {
+    if (context) {
+      context.onOpenChange(true);
+    }
+    if (onClick) {
+      onClick();
+    }
+    if (children && React.isValidElement(children) && children.props.onClick) {
+      children.props.onClick(e);
+    }
+  };
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, { 
+      onClick: handleClick
+    } as any);
+  }
+  return <div onClick={handleClick} className="cursor-pointer">{children}</div>;
+}
+
+export function DialogContent({ children }: { children: React.ReactNode }) {
+  const context = useContext(DialogContext);
+  
+  if (!context || !context.open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/50 animate-fade-in"
-        onClick={() => onOpenChange(false)}
+        onClick={() => context.onOpenChange(false)}
       />
       
       {/* Dialog Content */}
-      <Card className="relative z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto animate-scale-in">
-        {title && (
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle>{title}</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </CardHeader>
-        )}
-        <CardContent>{children}</CardContent>
-      </Card>
+      <div className="relative z-50 w-full max-w-md mx-4">
+        <Card className="max-h-[90vh] overflow-y-auto animate-scale-in">
+          <CardContent className="pt-6">{children}</CardContent>
+        </Card>
+      </div>
     </div>
+  );
+}
+
+export function DialogHeader({ children }: { children: React.ReactNode }) {
+  return <div className="mb-4">{children}</div>;
+}
+
+export function DialogTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+      <CardTitle>{children}</CardTitle>
+    </CardHeader>
   );
 }
 

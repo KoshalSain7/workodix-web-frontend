@@ -255,6 +255,32 @@ export const attendanceApi = {
   punchIn: () => apiClient.post<any>("/attendance/punch-in"),
   punchOut: () => apiClient.post<any>("/attendance/punch-out"),
   getTodayStatus: () => apiClient.get<any>("/attendance/today-status"),
+  punchWithLocation: (latitude: number, longitude: number, ipAddress?: string) =>
+    apiClient.post<any>("/attendance/punch", { latitude, longitude, ipAddress }),
+  getWithLocation: (userId?: string, startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (userId) params.append("userId", userId);
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    return apiClient.get<any[]>(`/attendance/with-location?${params.toString()}`);
+  },
+};
+
+// Office API
+export const officeApi = {
+  getAll: (activeOnly?: boolean) => {
+    const url = activeOnly ? "/office?activeOnly=true" : "/office";
+    return apiClient.get<any[]>(url);
+  },
+  getMyOffices: () => apiClient.get<any[]>("/office/my-offices"),
+  getOne: (id: string) => apiClient.get<any>(`/office/${id}`),
+  create: (data: any) => apiClient.post<any>("/office", data),
+  update: (id: string, data: any) => apiClient.put<any>(`/office/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/office/${id}`),
+  validateLocation: (latitude: number, longitude: number) =>
+    apiClient.get<any>(`/office/validate-location?latitude=${latitude}&longitude=${longitude}`),
+  assignUsers: (id: string, userIds: string[]) =>
+    apiClient.put<any>(`/office/${id}/assign-users`, { userIds }),
 };
 
 // Leave API
@@ -417,6 +443,7 @@ export const accessApi = {
   delete: (id: string) => apiClient.delete(`/access/${id}`),
   updateRoleAccess: (role: string, optionIds: string[]) =>
     apiClient.put<any>(`/access/role/${role}`, { optionIds }),
+  addSettings: () => apiClient.post<any>("/access/add-settings"),
 };
 
 export const searchApi = {
