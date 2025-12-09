@@ -111,7 +111,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     
     // If already loaded, don't reload
-    if (get().accessibleOptions && get().accessibleOptions.length > 0) {
+    const currentOptions = get().accessibleOptions;
+    if (currentOptions && currentOptions.length > 0) {
       return;
     }
 
@@ -188,7 +189,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
       // Load accessible options only if not already loaded
-      if (!get().accessibleOptions || get().accessibleOptions.length === 0) {
+      const currentOptions = get().accessibleOptions;
+      if (!currentOptions || currentOptions.length === 0) {
         await get().loadAccessibleOptions();
       }
     } catch (error) {

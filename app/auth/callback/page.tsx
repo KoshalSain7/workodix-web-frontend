@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { apiClient } from "@/lib/api";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export default function AuthCallbackPage() {
             lastName: user.lastName,
             email: user.email,
             company: user.company || "",
-            role: user.role || "",
+            roles: Array.isArray(user.roles) ? user.roles : (user.role ? [user.role] : []),
             prefix: user.prefix || "",
             phone: user.phone || "",
             dateOfBirth: user.dateOfBirth || "",
@@ -87,3 +87,17 @@ export default function AuthCallbackPage() {
   );
 }
 
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
+  );
+}

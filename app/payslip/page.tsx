@@ -61,7 +61,7 @@ export default function PayslipPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Designation</p>
-                <p className="font-medium">{user?.role}</p>
+                <p className="font-medium">{user?.roles?.join(", ") || "N/A"}</p>
               </div>
             </div>
           </CardContent>
@@ -110,12 +110,13 @@ export default function PayslipPage() {
                           </p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`/payslip/${payslip.id}`}>
-                          <Download className="h-4 w-4 mr-2" />
-                          View
-                        </a>
-                      </Button>
+                      <a 
+                        href={`/payslip/${payslip.id}`}
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 h-9 px-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        View
+                      </a>
                     </div>
                   );
                 })}

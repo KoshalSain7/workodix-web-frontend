@@ -415,7 +415,7 @@ export function Header() {
             <Button
               onClick={isPunchedIn ? handlePunchOut : handlePunchIn}
               disabled={loading}
-              variant={isPunchedIn ? "destructive" : "default"}
+              variant={isPunchedIn ? "outline" : "default"}
               className={`${
                 isPunchedIn
                   ? "bg-red-600 hover:bg-red-700 text-white shadow-md"

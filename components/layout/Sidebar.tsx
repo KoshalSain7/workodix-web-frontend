@@ -53,7 +53,7 @@ export function Sidebar() {
   const { accessibleOptions, loadAccessibleOptions } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [isHovered, setIsHovered] = useState(false);
-  const sidebarRef = useRef<HTMLAsideElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Load accessible options on mount (only once)
   useEffect(() => {

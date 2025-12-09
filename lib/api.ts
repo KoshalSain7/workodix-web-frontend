@@ -45,8 +45,8 @@ class ApiClient {
     const isFormData =
       typeof FormData !== "undefined" && options.body instanceof FormData;
 
-    const headers: HeadersInit = {
-      ...(options.headers || {}),
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string> || {}),
     };
 
     if (!isFormData && !headers["Content-Type"]) {

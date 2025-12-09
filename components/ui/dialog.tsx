@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { Button } from "./button";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { cn } from "@/lib/utils";
 import React, { createContext, useContext } from "react";
 
 interface DialogContextType {
@@ -44,8 +45,11 @@ export function DialogTrigger({
     if (onClick) {
       onClick();
     }
-    if (children && React.isValidElement(children) && children.props.onClick) {
-      children.props.onClick(e);
+    if (children && React.isValidElement(children)) {
+      const childProps = children.props as any;
+      if (childProps.onClick) {
+        childProps.onClick(e);
+      }
     }
   };
 
@@ -57,7 +61,7 @@ export function DialogTrigger({
   return <div onClick={handleClick} className="cursor-pointer">{children}</div>;
 }
 
-export function DialogContent({ children }: { children: React.ReactNode }) {
+export function DialogContent({ children, className }: { children: React.ReactNode; className?: string }) {
   const context = useContext(DialogContext);
   
   if (!context || !context.open) return null;
@@ -71,7 +75,7 @@ export function DialogContent({ children }: { children: React.ReactNode }) {
       />
       
       {/* Dialog Content */}
-      <div className="relative z-50 w-full max-w-md mx-4">
+      <div className={cn("relative z-50 w-full max-w-md mx-4", className)}>
         <Card className="max-h-[90vh] overflow-y-auto animate-scale-in">
           <CardContent className="pt-6">{children}</CardContent>
         </Card>

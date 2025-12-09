@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { chatApi } from "@/lib/api";
@@ -55,7 +55,7 @@ interface User {
   company?: string;
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
   const { user } = useAuthStore();
   const searchParams = useSearchParams();
   const userIdParam = searchParams.get("userId");
@@ -532,6 +532,25 @@ export default function ChatPage() {
         </div>
       </MainLayout>
     </AuthGuard>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <AuthGuard>
+        <MainLayout>
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading chat...</p>
+            </div>
+          </div>
+        </MainLayout>
+      </AuthGuard>
+    }>
+      <ChatPageContent />
+    </Suspense>
   );
 }
 

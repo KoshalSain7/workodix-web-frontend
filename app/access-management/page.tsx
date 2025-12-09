@@ -182,7 +182,7 @@ export default function AccessManagementPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {perms.map((perm) => {
+                      {(perms as any[]).map((perm) => {
                         const hasAccess = roleAccess[selectedRole]?.has(perm.id) || false;
                         return (
                           <div

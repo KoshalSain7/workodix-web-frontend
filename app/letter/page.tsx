@@ -197,16 +197,15 @@ export default function LetterPage() {
                       {new Date(request.createdAt).toLocaleDateString()}
                     </span>
                     {request.fileUrl && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a
-                          href={request.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </a>
-                      </Button>
+                      <a
+                        href={request.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-200 h-9 px-3 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </a>
                     )}
                   </div>
                 </CardContent>

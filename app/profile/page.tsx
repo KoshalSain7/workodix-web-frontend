@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, ChangeEvent } from "react";
+import { useEffect, useRef, useState, ChangeEvent, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { user, checkAuth } = useAuthStore();
   const searchParams = useSearchParams();
   const viewUserId = searchParams.get('userId');
@@ -582,6 +582,25 @@ export default function ProfilePage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <MainLayout>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-4 text-muted-foreground">Loading profile...</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }
 
