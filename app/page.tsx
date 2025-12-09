@@ -5,7 +5,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { AuthGuard } from "@/components/layout/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDashboardStore } from "@/stores/dashboardStore";
 import { useAuthStore } from "@/stores/authStore";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import {
   ArrowRight,
   Bell,
   Mail,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -326,23 +327,29 @@ export default function Home() {
           {profileCompletion < 100 && (
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium">Profile - {profileCompletion}% Completed</span>
-              <div className="w-24 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                <div className="bg-primary h-1.5 rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }}></div>
+              <div className="w-24 bg-muted rounded-full h-1.5 overflow-hidden">
+                <div className="gradient-orange-blue h-1.5 rounded-full transition-all duration-500" style={{ width: `${profileCompletion}%` }}></div>
               </div>
             </div>
           )}
           <div className="flex items-center gap-4">
             <Button 
-              className="transition-smooth hover:scale-105 animate-fade-in"
+              className="transition-smooth hover:scale-105 animate-fade-in bg-muted text-foreground hover:bg-muted/80 border border-border"
               onClick={() => setShowCreatePost(true)}
             >
               <Edit className="h-4 w-4 mr-2" />
+              Create Post
+            </Button>
+            <Button 
+              className="transition-smooth hover:scale-105 animate-fade-in gradient-red-orange text-white hover:opacity-90 border-0"
+              onClick={() => setShowCreatePost(true)}
+            >
               Post
             </Button>
             {profileCompletion < 100 && (
               <Button 
                 variant="outline" 
-                className="transition-smooth hover:scale-105 animate-fade-in"
+                className="transition-smooth hover:scale-105 animate-fade-in border-border hover:bg-muted"
                 onClick={handleOpenProfileTasks}
               >
                 <User className="h-4 w-4 mr-2" />
@@ -357,9 +364,14 @@ export default function Home() {
           {/* Left Column - Highlights */}
           <div ref={leftColumnRef} className="space-y-6 overflow-y-auto pr-2 scrollbar-thin animate-fade-in">
             {/* Today's Celebration */}
-            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+            <Card className="animate-scale-in transition-smooth hover:shadow-lg bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-lg">Today&apos;s celebration</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg gradient-pink-blue flex items-center justify-center">
+                    <Gift className="h-5 w-5 text-white" />
+                  </div>
+                  Today&apos;s celebration
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -452,10 +464,12 @@ export default function Home() {
             </Card>
 
             {/* Wall of Fame */}
-            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+            <Card className="animate-scale-in transition-smooth hover:shadow-lg bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Star className="h-5 w-5 animate-pulse" />
+                  <div className="h-8 w-8 rounded-lg gradient-pink-blue flex items-center justify-center">
+                    <Star className="h-5 w-5 text-white animate-pulse" />
+                  </div>
                   Wall of fame
                 </CardTitle>
               </CardHeader>
@@ -471,8 +485,8 @@ export default function Home() {
                             className="flex items-center gap-3 p-3 bg-muted rounded-lg transition-smooth hover:bg-muted/80 animate-slide-up"
                             style={{ animationDelay: `${idx * 0.1}s` }}
                           >
-                            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                              <Star className="h-5 w-5 text-primary" />
+                            <div className="h-10 w-10 rounded-lg gradient-pink-blue flex items-center justify-center">
+                              <Star className="h-5 w-5 text-white" />
                             </div>
                             <div className="flex-1">
                               <p className="text-sm font-medium">{badge.title}</p>
@@ -485,8 +499,8 @@ export default function Home() {
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-4">
-                          <span className="text-2xl">?</span>
+                        <div className="h-20 w-20 rounded-lg gradient-pink-blue flex items-center justify-center mb-4">
+                          <span className="text-2xl text-white">?</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           No badge received this week
@@ -494,7 +508,7 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <Link href="/wall-of-fame" className="text-sm text-primary hover:underline">
+                  <Link href="/wall-of-fame" className="text-sm text-gradient-red-orange hover:underline font-medium">
                     See more
                   </Link>
                 </div>
@@ -502,10 +516,12 @@ export default function Home() {
             </Card>
 
             {/* Job Openings */}
-            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+            <Card className="animate-scale-in transition-smooth hover:shadow-lg bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="h-5 w-5" />
+                  <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-white" />
+                  </div>
                   Job Openings
                 </CardTitle>
               </CardHeader>
@@ -553,7 +569,7 @@ export default function Home() {
               <div className="text-center py-8 text-muted-foreground animate-pulse">Loading feed...</div>
             ) : feedPosts.length > 0 ? (
               feedPosts.map((post, index) => (
-              <Card key={post.id} className="animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
+              <Card key={post.id} className="animate-slide-up bg-card border-border hover:shadow-lg transition-smooth" style={{ animationDelay: `${index * 0.1}s` }}>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="relative h-10 w-10 shrink-0">
@@ -828,7 +844,7 @@ export default function Home() {
           {/* Right Column - Inbox, Calendar, etc */}
           <div ref={rightColumnRef} className="space-y-6 overflow-y-auto pr-2 scrollbar-thin animate-fade-in">
             {/* Inbox */}
-            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+            <Card className="animate-scale-in transition-smooth hover:shadow-lg bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-purple-500 transition-smooth hover:scale-110" />
@@ -839,7 +855,7 @@ export default function Home() {
                 {inboxTasks ? (
                   <>
                     <Link href="/inbox">
-                      <div className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer transition-colors">
+                      <div className="flex items-center justify-between p-2 rounded border border-border hover:bg-muted cursor-pointer transition-colors">
                         <div className="flex items-center gap-2">
                           <Bell className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">Pending Tasks</span>
@@ -847,8 +863,13 @@ export default function Home() {
                         <span className="text-sm font-semibold">{inboxTasks.pendingTasks}</span>
                       </div>
                     </Link>
+                    {inboxTasks.pendingTasks > 0 && (
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div className="gradient-orange-blue h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min((inboxTasks.pendingTasks / 10) * 100, 100)}%` }}></div>
+                      </div>
+                    )}
                     <Link href="/chat">
-                      <div className="flex items-center justify-between p-2 rounded border hover:bg-muted cursor-pointer transition-colors">
+                      <div className="flex items-center justify-between p-2 rounded border border-border hover:bg-muted cursor-pointer transition-colors">
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">Messages</span>
@@ -857,7 +878,7 @@ export default function Home() {
                       </div>
                     </Link>
                     <Link href="/inbox">
-                      <Button variant="outline" className="w-full mt-2">
+                      <Button variant="outline" className="w-full mt-2 gradient-red-orange text-white border-0 hover:opacity-90">
                         View All
                       </Button>
                     </Link>
@@ -871,11 +892,11 @@ export default function Home() {
             </Card>
 
             {/* Calendar */}
-            <Card className="animate-scale-in transition-smooth hover:shadow-md">
+            <Card className="animate-scale-in transition-smooth hover:shadow-lg bg-card border-border">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">Calendar</CardTitle>
-                  <Link href="/attendance" className="text-sm text-primary hover:underline transition-smooth">
+                  <Link href="/attendance" className="text-sm text-gradient-red-orange hover:underline transition-smooth font-medium">
                     Go to calendar
                   </Link>
                 </div>
@@ -949,8 +970,12 @@ export default function Home() {
       </div>
 
       {/* Create Post Dialog */}
-      <Dialog open={showCreatePost} onOpenChange={setShowCreatePost} title="Create New Post">
-        <form onSubmit={handleCreatePost} className="space-y-4">
+      <Dialog open={showCreatePost} onOpenChange={setShowCreatePost}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Post</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreatePost} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Post Type</label>
             <select
@@ -1018,11 +1043,16 @@ export default function Home() {
             </Button>
           </div>
         </form>
+        </DialogContent>
       </Dialog>
 
       {/* Profile Tasks Dialog */}
-      <Dialog open={showProfileTasks} onOpenChange={setShowProfileTasks} title="Complete Your Profile">
-        {loadingTasks ? (
+      <Dialog open={showProfileTasks} onOpenChange={setShowProfileTasks}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Your Profile</DialogTitle>
+          </DialogHeader>
+          {loadingTasks ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-muted-foreground animate-pulse">Loading tasks...</div>
           </div>
@@ -1036,7 +1066,7 @@ export default function Home() {
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-500" 
+                  className="gradient-orange-blue h-2 rounded-full transition-all duration-500" 
                   style={{ width: `${profileTasks.percentage}%` }}
                 ></div>
               </div>
@@ -1120,6 +1150,7 @@ export default function Home() {
             <div className="text-muted-foreground">No tasks available</div>
           </div>
         )}
+        </DialogContent>
       </Dialog>
     </MainLayout>
     </AuthGuard>

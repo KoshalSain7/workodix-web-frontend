@@ -338,7 +338,7 @@ export default function HelpdeskPage() {
             {/* Left Column - Form */}
             <div className="space-y-6">
               {/* Form Card */}
-              <Card>
+              <Card className="bg-card border-border">
                 <CardContent className="p-6">
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Request Type and Request To - Same Row */}
@@ -510,7 +510,7 @@ export default function HelpdeskPage() {
             {/* Right Column - Requests List */}
             <div className="space-y-6">
               {/* My Requests */}
-              <Card>
+              <Card className="bg-card border-border">
                 <CardHeader>
                   <CardTitle>My Requests</CardTitle>
                 </CardHeader>
@@ -557,7 +557,7 @@ export default function HelpdeskPage() {
 
               {/* Received Requests (for Admins/HRs/Directors/Managers) */}
               {canViewReceivedRequests && (
-                <Card>
+                <Card className="bg-card border-border">
                   <CardHeader>
                     <CardTitle>Received Requests</CardTitle>
                   </CardHeader>

@@ -41,7 +41,7 @@ export default function CtcPage() {
         <h1 className="text-2xl font-bold">Cost to Company (CTC)</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
+          <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Annual CTC

@@ -82,57 +82,57 @@ export const theme = {
   accentLight: "#f5f5f5",
 
   // ============================================
-  // BACKGROUND COLORS
+  // BACKGROUND COLORS (Dark Theme)
   // ============================================
 
-  // background: "#f5f5f5" - Very light gray
+  // background: "#0f0f0f" - Very dark gray/black
   // Used in: Main page background, body background, overall app background
-  background: "#f5f5f5",
+  background: "#0f0f0f",
 
-  // foreground: "#171717" - Very dark gray (almost black)
+  // foreground: "#ffffff" - White
   // Used in: Primary text color, main content text, headings, card text
-  foreground: "#171717",
+  foreground: "#ffffff",
 
   // ============================================
-  // CARD COLORS
+  // CARD COLORS (Dark Theme)
   // ============================================
 
-  // card: "#ffffff" - Pure white
+  // card: "#1a1a1a" - Dark gray
   // Used in: Card backgrounds, all card components (Feed cards, celebration cards,
   //          inbox cards, calendar cards, leave balance cards, etc.)
-  card: "#ffffff",
+  card: "#1a1a1a",
 
-  // cardForeground: "#171717" - Very dark gray (almost black)
+  // cardForeground: "#ffffff" - White
   // Used in: Text inside cards, card titles, card content text
-  cardForeground: "#171717",
+  cardForeground: "#ffffff",
 
   // ============================================
-  // MUTED COLORS
+  // MUTED COLORS (Dark Theme)
   // ============================================
 
-  // muted: "#f3f4f6" - Light gray
+  // muted: "#2a2a2a" - Dark gray
   // Used in: Muted backgrounds, hover states for sidebar items, progress bar backgrounds,
   //          celebration card item backgrounds, leave balance card backgrounds,
   //          search input backgrounds, disabled states
-  muted: "#f3f4f6",
+  muted: "#2a2a2a",
 
-  // mutedForeground: "#6b7280" - Medium gray
+  // mutedForeground: "#a0a0a0" - Light gray
   // Used in: Secondary text, muted text, helper text, timestamps, descriptions,
   //          "Hope you are having a great day" text, employee role text
-  mutedForeground: "#6b7280",
+  mutedForeground: "#a0a0a0",
 
   // ============================================
-  // BORDER COLORS
+  // BORDER COLORS (Dark Theme)
   // ============================================
 
-  // border: "#e5e7eb" - Light gray
+  // border: "#333333" - Dark gray
   // Used in: Card borders, input borders, general borders throughout the app,
   //          sidebar border, divider lines
-  border: "#e5e7eb",
+  border: "#333333",
 
-  // input: "#e5e7eb" - Light gray (same as border)
+  // input: "#333333" - Dark gray (same as border)
   // Used in: Input field borders, search input borders, form input borders
-  input: "#e5e7eb",
+  input: "#333333",
 
   // ============================================
   // STATUS COLORS (Semantic Colors)
@@ -183,9 +183,9 @@ export const theme = {
     // Used in: Calendar - today's date highlight, today indicator dot in calendar legend
     today: "#2563eb",
 
-    // present: "#000000" - Pure black (changed from green)
+    // present: "#ffffff" - White
     // Used in: Calendar - present status indicator dot, present indicator in calendar legend
-    present: "#000000",
+    present: "#ffffff",
 
     // absent: "#dc2626" - Red
     // Used in: Calendar - absent status indicator dot, absent indicator in calendar legend
@@ -268,9 +268,9 @@ export const theme = {
   // ============================================
 
   header: {
-    // background: "#000000" - Pure black
+    // background: "#0a0a0a" - Very dark gray/black
     // Used in: Top header/navigation bar background (Kodix logo area)
-    background: "#000000",
+    background: "#0a0a0a",
 
     // foreground: "#ffffff" - Pure white
     // Used in: Header text color, header icon colors, company name text
@@ -286,33 +286,33 @@ export const theme = {
   },
 
   // ============================================
-  // SIDEBAR COLORS
+  // SIDEBAR COLORS (Dark Theme)
   // ============================================
 
   sidebar: {
-    // background: "#ffffff" - Pure white
+    // background: "#1a1a1a" - Dark gray
     // Used in: Sidebar background, sidebar card backgrounds
-    background: "#ffffff",
+    background: "#1a1a1a",
 
-    // foreground: "#171717" - Very dark gray
+    // foreground: "#ffffff" - White
     // Used in: Sidebar text color, sidebar navigation item text
-    foreground: "#171717",
+    foreground: "#ffffff",
 
-    // activeBackground: "#000000" - Pure black
+    // activeBackground: "#2563eb" - Blue (gradient can be applied)
     // Used in: Active sidebar navigation item background (Home, Inbox when active)
-    activeBackground: "#000000",
+    activeBackground: "#2563eb",
 
     // activeForeground: "#ffffff" - Pure white
     // Used in: Active sidebar navigation item text color
     activeForeground: "#ffffff",
 
-    // hoverBackground: "#f3f4f6" - Light gray
+    // hoverBackground: "#2a2a2a" - Dark gray
     // Used in: Sidebar item hover state background, inactive sidebar items on hover
-    hoverBackground: "#f3f4f6",
+    hoverBackground: "#2a2a2a",
 
-    // border: "#e5e7eb" - Light gray
+    // border: "#333333" - Dark gray
     // Used in: Sidebar right border, sidebar divider lines
-    border: "#e5e7eb",
+    border: "#333333",
   },
 
   // ============================================

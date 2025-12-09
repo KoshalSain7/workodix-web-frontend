@@ -47,6 +47,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.style.setProperty("--calendar-leave", theme.calendar.leave);
     root.style.setProperty("--calendar-holiday", theme.calendar.holiday);
     root.style.setProperty("--calendar-on-duty", theme.calendar.onDuty);
+    
+    // Inject header and sidebar colors
+    root.style.setProperty("--header-background", theme.header.background);
+    root.style.setProperty("--header-foreground", theme.header.foreground);
+    root.style.setProperty("--header-search-background", theme.header.searchBackground);
+    root.style.setProperty("--header-search-foreground", theme.header.searchForeground);
+    root.style.setProperty("--sidebar-background", theme.sidebar.background);
+    root.style.setProperty("--sidebar-foreground", theme.sidebar.foreground);
+    root.style.setProperty("--sidebar-active-background", theme.sidebar.activeBackground);
+    root.style.setProperty("--sidebar-active-foreground", theme.sidebar.activeForeground);
+    root.style.setProperty("--sidebar-hover-background", theme.sidebar.hoverBackground);
+    root.style.setProperty("--sidebar-border", theme.sidebar.border);
 
     // Inject all font settings as CSS variables
     root.style.setProperty("--font-primary", fonts.primary);

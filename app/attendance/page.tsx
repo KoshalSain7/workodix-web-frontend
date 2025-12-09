@@ -69,11 +69,11 @@ export default function AttendancePage() {
               {/* Geolocation Punch Card */}
               <GeolocationPunch />
 
-              <Card>
+              <Card className="bg-card border-border">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle>Calendar</CardTitle>
-                    <Link href="/calendar" className="text-sm text-primary hover:underline">
+                    <Link href="/calendar" className="text-sm text-gradient-red-orange hover:underline font-medium">
                       Go to calendar
                     </Link>
                   </div>
@@ -85,7 +85,7 @@ export default function AttendancePage() {
             </div>
 
             <div className="space-y-6">
-              <Card>
+              <Card className="bg-card border-border">
                 <CardHeader>
                   <CardTitle>Attendance Summary</CardTitle>
                 </CardHeader>
@@ -105,7 +105,7 @@ export default function AttendancePage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-card border-border">
                 <CardHeader>
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>

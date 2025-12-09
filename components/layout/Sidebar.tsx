@@ -135,7 +135,7 @@ export function Sidebar() {
     <aside
       ref={sidebarRef}
       className={cn(
-        "bg-card border-r border-border h-[calc(100vh-73px)] overflow-y-auto transition-all duration-300 ease-in-out",
+        "bg-[var(--sidebar-background)] border-r border-[var(--sidebar-border)] h-[calc(100vh-73px)] overflow-y-auto transition-all duration-300 ease-in-out",
         sidebarWidth
       )}
     >
@@ -174,7 +174,7 @@ export function Sidebar() {
                         className={cn(
                           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative",
                           isActive
-                            ? "bg-primary text-white font-semibold shadow-sm"
+                            ? "bg-blue-600 text-white font-semibold shadow-sm"
                             : "text-foreground hover:bg-muted/50"
                         )}
                       >
@@ -223,7 +223,7 @@ export function Sidebar() {
                           ? "gap-3 px-3 py-2.5 rounded-lg w-full"
                           : "justify-center w-10 h-10 rounded-lg",
                         isActive
-                          ? "bg-primary text-white font-semibold shadow-lg"
+                          ? "bg-blue-600 text-white font-semibold shadow-lg"
                           : "text-foreground hover:bg-muted/50"
                       )}
                       title={!isExpanded ? item.name : undefined}
@@ -269,7 +269,7 @@ export function Sidebar() {
                             ? "gap-3 px-3 py-2.5 rounded-lg w-full"
                             : "justify-center w-10 h-10 rounded-lg",
                           isActive
-                            ? "bg-primary text-white font-semibold shadow-lg"
+                            ? "bg-blue-600 text-white font-semibold shadow-lg"
                             : "text-foreground hover:bg-muted/50"
                         )}
                         title={!isExpanded ? item.name : undefined}
@@ -316,7 +316,7 @@ export function Sidebar() {
                             ? "gap-3 px-3 py-2.5 rounded-lg w-full"
                             : "justify-center w-10 h-10 rounded-lg",
                           isActive
-                            ? "bg-primary text-white font-semibold shadow-lg"
+                            ? "bg-blue-600 text-white font-semibold shadow-lg"
                             : "text-foreground hover:bg-muted/50"
                         )}
                         title={!isExpanded ? item.name : undefined}

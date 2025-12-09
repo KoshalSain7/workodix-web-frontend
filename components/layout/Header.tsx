@@ -271,7 +271,7 @@ export function Header() {
   };
 
   return (
-    <header className="bg-primary text-primary-foreground px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <header className="bg-[var(--header-background)] text-[var(--header-foreground)] px-6 py-4 flex items-center justify-between sticky top-0 z-50 border-b border-border">
       <div className="flex items-center gap-8 flex-1">
         <h1 className="text-lg font-semibold">
           {user?.company || "WorkFolio"}
@@ -282,7 +282,7 @@ export function Header() {
             <Input
               type="search"
               placeholder="Search for actions, pages, requests, reports, people..."
-              className="pl-10 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60 focus-visible:ring-primary-foreground/50 transition-smooth"
+              className="pl-10 bg-[var(--header-search-background)] border-border/50 text-[var(--header-search-foreground)] placeholder:text-muted-foreground focus-visible:ring-primary/50 transition-smooth"
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);

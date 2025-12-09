@@ -16,7 +16,7 @@ export default function LeaveBalancePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {leaveBalances.map((balance) => (
-            <Card key={balance.type}>
+            <Card key={balance.type} className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="text-lg">{balance.type}</CardTitle>
               </CardHeader>
@@ -43,7 +43,7 @@ export default function LeaveBalancePage() {
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
-                    className="bg-primary h-2 rounded-full"
+                    className="gradient-orange-blue h-2 rounded-full"
                     style={{
                       width: `${(balance.used / balance.total) * 100}%`,
                     }}

@@ -105,46 +105,50 @@ export function Calendar({
               key={date.toISOString()}
               onClick={() => onDateSelect?.(date)}
               className={cn(
-                "aspect-square rounded-md text-xs transition-colors relative flex items-center justify-center font-medium",
+                "aspect-square rounded-md text-xs transition-colors relative flex flex-col items-center justify-center font-medium",
                 !isCurrentMonth && "text-muted-foreground opacity-50",
-                // Selected date - primary color with white text
-                isSelected && "bg-primary text-primary-foreground font-semibold",
-                // Today - muted background
-                isToday && !isSelected && "bg-muted text-foreground font-semibold",
-                // Status colors - apply background with appropriate text color
-                showStatusColor && statusColors[status] && statusColors[status],
-                showStatusColor && getStatusTextColor(),
+                // Selected date - blue background with white text
+                isSelected && "bg-blue-600 text-white font-semibold",
+                // Today - blue background with white text
+                isToday && !isSelected && "bg-blue-600 text-white font-semibold",
                 // Default hover state
-                !isSelected && !isToday && !showStatusColor && isCurrentMonth && "hover:bg-muted"
+                !isSelected && !isToday && isCurrentMonth && "hover:bg-muted"
               )}
             >
-              {format(date, "d")}
+              <span>{format(date, "d")}</span>
+              {/* Status indicator bar below date */}
+              {status && status !== "Today" && !isSelected && !isToday && (
+                <div className={cn(
+                  "absolute bottom-1 left-1/2 transform -translate-x-1/2 w-3/4 h-1 rounded-full",
+                  status === "Present" ? "bg-white" : statusColors[status] || "bg-muted"
+                )} />
+              )}
             </button>
           );
         })}
       </div>
 
       {attendanceData.length > 0 && (
-        <div className="mt-4 pt-4 border-t">
+        <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center justify-center gap-4 flex-wrap text-xs">
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-calendar-today"></span>
+              <span className="h-2 w-6 rounded-full bg-calendar-today"></span>
               <span>Today</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-calendar-present"></span>
+              <span className="h-2 w-6 rounded-full bg-white"></span>
               <span>Present</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-calendar-leave"></span>
+              <span className="h-2 w-6 rounded-full bg-calendar-leave"></span>
               <span>Leave</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-calendar-absent"></span>
+              <span className="h-2 w-6 rounded-full bg-calendar-absent"></span>
               <span>Absent</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-calendar-holiday"></span>
+              <span className="h-2 w-6 rounded-full bg-calendar-holiday"></span>
               <span>Holiday</span>
             </div>
           </div>

@@ -62,7 +62,7 @@ export default function GoalsPage() {
         </div>
 
         {goals.length === 0 ? (
-          <Card>
+          <Card className="bg-card border-border">
             <CardContent className="text-center py-12">
               <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">No goals yet</p>
@@ -78,7 +78,7 @@ export default function GoalsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {goals.map((goal) => (
-              <Card key={goal.id}>
+              <Card key={goal.id} className="bg-card border-border">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -100,7 +100,7 @@ export default function GoalsPage() {
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
-                        className="bg-primary h-2 rounded-full"
+                        className="gradient-orange-blue h-2 rounded-full"
                         style={{ width: `${goal.progress}%` }}
                       ></div>
                     </div>
